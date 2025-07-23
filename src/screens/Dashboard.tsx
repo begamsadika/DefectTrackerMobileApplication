@@ -81,9 +81,9 @@ const Dashboard = () => {
             <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('low'); setModalVisible(false); }}>
               <Text style={styles.filterTextGreen}>Low Risk</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('all'); setModalVisible(false); }}>
+            {/* <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('all'); setModalVisible(false); }}>
               <Text style={styles.filterTextDefault}>All Projects</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </TouchableOpacity>
       </Modal>
@@ -94,7 +94,7 @@ const Dashboard = () => {
       </Text>
       <View style={styles.sectionDivider} />
 
-      <Text style={styles.sectionTitle}>Project Status Insights</Text>
+      <Text style={[styles.sectionTitle, { marginLeft: 20 }]}>Project Status Insights</Text>
       {/* High Risk Projects Card */}
       <View style={styles.cardsRow}>
         <View style={[styles.card, styles.cardRed]}>
@@ -136,12 +136,12 @@ const Dashboard = () => {
       </View>
 
       <View style={{marginBottom: 24}}>
-        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-          <Text style={[styles.sectionTitle, { marginTop: 18 }]}>All Projects</Text>
-          <TouchableOpacity style={styles.menuDots} onPress={() => setModalVisible(true)}>
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
+        <View style={styles.allProjectsCard}>
+          <Text style={[styles.sectionTitle, { marginTop: 0, marginLeft: 16 }]}>All Projects</Text>
+          <TouchableOpacity style={styles.ssMenuIcon} onPress={() => setModalVisible(true)}>
+            <View style={styles.ssBar1} />
+            <View style={styles.ssBar2} />
+            <View style={styles.ssBar3} />
           </TouchableOpacity>
         </View>
         <View style={styles.circleGrid}>
@@ -185,6 +185,24 @@ const Dashboard = () => {
 };
 
 const styles = StyleSheet.create({
+  allProjectsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 18, // increased vertical padding for more height
+    minHeight: 64, // ensure a minimum height
+    marginBottom: 32,
+    marginTop: 18,
+    marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -208,14 +226,14 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   overviewTitle: {
-    fontSize: 22,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#222',
     textAlign: 'center',
     marginBottom: 4,
   },
   overviewSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#64748b',
     textAlign: 'center',
     marginBottom: 6,
@@ -229,7 +247,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#222',
     marginBottom: 8,
@@ -435,19 +453,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
-  menuDots: {
+  ssMenuIcon: {
     position: 'absolute',
-    top: 18,
+    top: 10,
     right: 18,
-    flexDirection: 'row',
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
     zIndex: 10,
+    backgroundColor: 'transparent',
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  ssBar1: {
+    width: 32,
+    height: 4,
     backgroundColor: '#222',
-    marginHorizontal: 2,
+    borderRadius: 2,
+    marginBottom: 6,
+  },
+  ssBar2: {
+    width: 32,
+    height: 4,
+    backgroundColor: '#222',
+    borderRadius: 2,
+    marginBottom: 6,
+  },
+  ssBar3: {
+    width: 20,
+    height: 4,
+    backgroundColor: '#222',
+    borderRadius: 2,
+    alignSelf: 'flex-end',
   },
   modalOverlay: {
     flex: 1,
