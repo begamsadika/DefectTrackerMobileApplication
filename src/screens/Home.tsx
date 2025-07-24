@@ -1,21 +1,84 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, TextInput } from 'react-native';
-import Login from './Login';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Feather';
 
-import LoginScreen from './Login';
+// Define navigation type for Home
+// Replace 'RootStackParamList' with your actual stack param list if different
+type RootStackParamList = {
+  Home: undefined;
+  Dashboard: undefined;
+};
 
-const Home = ({ navigation }) => {
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
+
+interface HomeProps {
+  navigation: HomeScreenNavigationProp;
+  route: HomeScreenRouteProp;
+}
+
+const Home: React.FC<HomeProps> = ({ navigation }) => {
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [rememberMe, setRememberMe] = React.useState(false);
+
+  const handleLogin = () => {
+    // Implement login logic here
+    navigation.navigate('Dashboard');
+  };
+
   return (
-    <ImageBackground source={require('../assets/Defect-Tracking-Tools.jpg')} style={styles.backgroundImage}>
+    <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.heading}>Defect Tracker</Text>
-          <TouchableOpacity style={styles.iconContainer}>
-            <Image source={require('../assets/user.png')} style={styles.userIcon} />
-          </TouchableOpacity>
-        </View>
         <View style={styles.body}>
-          <LoginScreen navigation={navigation} />
+          <Text style={styles.headingSS}>DEFECT TRACKER</Text>
+          <View style={styles.card}>
+            {/* Avatar */}
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatarCircle}>
+                <Image source={require('../assets/user.png')} style={styles.avatarIcon} />
+              </View>
+            </View>
+            {/* Login Form */}
+            <Text style={styles.title}>Log In</Text>
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor="#b6c2d6"
+                value={username}
+                onChangeText={setUsername}
+              />
+            </View>
+            <View style={styles.inputGroup}>
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#b6c2d6"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+            <View style={styles.row}>
+              <TouchableOpacity style={styles.checkboxContainer} onPress={() => setRememberMe(!rememberMe)}>
+                <View style={[styles.checkbox, rememberMe && { backgroundColor: '#2563eb', borderColor: '#2563eb' }]}> 
+                  {rememberMe && (
+                    <Icon name="check" size={18} color="#fff" />
+                  )}
+                </View>
+                <Text style={styles.rememberMeText}>Remember me</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Authorization')}>
+                <Text style={styles.forgotText}>Forgot password?</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Log In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ImageBackground>
@@ -25,30 +88,22 @@ const Home = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(244,247,254,0.7)',
+    backgroundColor: 'rgba(24,52,90,0.85)', // deep blue overlay
     justifyContent: 'flex-start',
   },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
     resizeMode: 'cover',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eaf1ff',
-    elevation: 2,
-  },
-  heading: {
-    fontSize: 28,
+  headingSS: {
+    fontSize: 34,
     fontWeight: 'bold',
-    color: '#2563eb',
-    marginBottom: 8,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 40,
+    marginBottom: 18,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
   iconContainer: {
     padding: 4,
@@ -69,23 +124,26 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#fff',
-    borderRadius: 20,
+    backgroundColor: 'rgba(30,41,59,0.85)', // semi-transparent dark card
+    borderRadius: 28,
     padding: 32,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
     marginTop: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(60,80,120,0.3)',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#222',
+    color: '#fff',
     textAlign: 'center',
-    marginBottom: 4,
+    marginBottom: 12,
+    letterSpacing: 1,
   },
   subtitle: {
     fontSize: 16,
@@ -117,7 +175,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#222',
+    color: '#fff',
+    backgroundColor: 'rgba(30,41,59,0.85)',
+    borderWidth: 1,
+    borderColor: '#3b4a5a',
+    borderRadius: 14,
+    marginBottom: 2,
   },
   row: {
     flexDirection: 'row',
@@ -140,30 +203,54 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   rememberMeText: {
-    color: '#222',
+    color: '#b6c2d6',
     fontSize: 14,
   },
   forgotText: {
-    color: '#2563eb',
+    color: '#b6c2d6',
     fontWeight: '500',
     fontSize: 14,
   },
   button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     width: '100%',
     alignItems: 'center',
     marginTop: 8,
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   buttonText: {
-    color: '#fff',
+    color: 'rgba(30,41,59,0.85)', // matches card background
     textAlign: 'center',
     fontWeight: '700',
     fontSize: 18,
     letterSpacing: 1,
+  },
+  avatarWrap: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(60,80,120,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(120,140,180,0.3)',
+  },
+  avatarIcon: {
+    width: 40,
+    height: 40,
+    tintColor: '#b6c2d6',
   },
 });
 

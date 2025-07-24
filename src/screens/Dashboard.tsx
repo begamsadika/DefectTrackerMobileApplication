@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackground } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -63,128 +63,140 @@ const Dashboard = () => {
     : PROJECTS.filter(p => p.risk === selectedRisk);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <View style={styles.modalMenu}>
-            <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('high'); setModalVisible(false); }}>
-              <Text style={styles.filterTextRed}>High Risk</Text>
+    <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
+      <View style={styles.overlay}>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+          <Modal
+            visible={modalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalMenu}>
+                <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('high'); setModalVisible(false); }}>
+                  <Text style={styles.filterTextRed}>High Risk</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('medium'); setModalVisible(false); }}>
+                  <Text style={styles.filterTextYellow}>Medium Risk</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('low'); setModalVisible(false); }}>
+                  <Text style={styles.filterTextGreen}>Low Risk</Text>
+                </TouchableOpacity>
+                {/* <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('all'); setModalVisible(false); }}>
+                  <Text style={styles.filterTextDefault}>All Projects</Text>
+                </TouchableOpacity> */}
+              </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('medium'); setModalVisible(false); }}>
-              <Text style={styles.filterTextYellow}>Medium Risk</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('low'); setModalVisible(false); }}>
-              <Text style={styles.filterTextGreen}>Low Risk</Text>
-            </TouchableOpacity>
-            {/* <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('all'); setModalVisible(false); }}>
-              <Text style={styles.filterTextDefault}>All Projects</Text>
-            </TouchableOpacity> */}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+          </Modal>
 
-      <Text style={styles.overviewTitle}>Dashboard Overview</Text>
-      <Text style={styles.overviewSubtitle}>
-        Gain insights into your projects with real-time health metrics and status summaries
-      </Text>
-      <View style={styles.sectionDivider} />
+          <Text style={styles.overviewTitle}>Dashboard Overview</Text>
+          <Text style={styles.overviewSubtitle}>
+            Gain insights into your projects with real-time health metrics and status summaries
+          </Text>
+          <View style={styles.sectionDivider} />
 
-      <Text style={[styles.sectionTitle, { marginLeft: 20 }]}>Project Status Insights</Text>
-      {/* High Risk Projects Card */}
-      <View style={styles.cardsRow}>
-        <View style={[styles.card, styles.cardRed]}>
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.cardIconCircleRedCustom, { backgroundColor: riskColors.high }]}> 
-              <SafeIcon name="alert-circle" size={24} color="#fff" fallbackText="⚠" />
+          <Text style={[styles.sectionTitless, { marginLeft: 20 }]}>Project Status Insights</Text>
+          {/* High Risk Projects Card */}
+          <View style={styles.cardsRow}>
+            <View style={[styles.card, styles.cardRed]}>
+              <View style={styles.cardHeaderRow}>
+                <View style={[styles.cardIconCircleRedCustom, { backgroundColor: riskColors.high }]}> 
+                  <SafeIcon name="alert-circle" size={24} color="#fff" fallbackText="⚠" />
+                </View>
+                <Text style={styles.cardTitle}>High Risk Projects</Text>
+                <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{PROJECTS.filter(p => p.risk === 'high').length}</Text>
+              </View>
+              <Text style={[styles.cardStatusRed, { color: riskColors.high }]}>Immediate attention required</Text>
             </View>
-            <Text style={styles.cardTitle}>High Risk Projects</Text>
-            <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{PROJECTS.filter(p => p.risk === 'high').length}</Text>
           </View>
-          <Text style={[styles.cardStatusRed, { color: riskColors.high }]}>Immediate attention required</Text>
-        </View>
-      </View>
-      {/* Medium Risk Projects Card */}
-      <View style={styles.cardsRow}>
-        <View style={[styles.card, styles.cardYellow]}>
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.cardIconCircleYellow, { backgroundColor: riskColors.medium }]}> 
-              <SafeIcon name="clock" size={24} color="#fff" fallbackText="⏰" />
+          {/* Medium Risk Projects Card */}
+          <View style={styles.cardsRow}>
+            <View style={[styles.card, styles.cardYellow]}>
+              <View style={styles.cardHeaderRow}>
+                <View style={[styles.cardIconCircleYellow, { backgroundColor: riskColors.medium }]}> 
+                  <SafeIcon name="clock" size={24} color="#fff" fallbackText="⏰" />
+                </View>
+                <Text style={styles.cardTitle}>Medium Risk Projects</Text>
+                <Text style={[styles.cardCountYellow, { color: riskColors.medium }]}>{PROJECTS.filter(p => p.risk === 'medium').length}</Text>
+              </View>
+              <Text style={[styles.cardStatusYellow, { color: riskColors.medium }]}>Monitor progress closely</Text>
             </View>
-            <Text style={styles.cardTitle}>Medium Risk Projects</Text>
-            <Text style={[styles.cardCountYellow, { color: riskColors.medium }]}>{PROJECTS.filter(p => p.risk === 'medium').length}</Text>
           </View>
-          <Text style={[styles.cardStatusYellow, { color: riskColors.medium }]}>Monitor progress closely</Text>
-        </View>
-      </View>
-      {/* Low Risk Projects Card */}
-      <View style={styles.cardsRow}>
-        <View style={[styles.card, styles.cardGreen]}>
-          <View style={styles.cardHeaderRow}>
-            <View style={[styles.cardIconCircleGreen, { backgroundColor: riskColors.low }]}> 
-              <SafeIcon name="check-circle" size={24} color="#fff" fallbackText="✓" />
+          {/* Low Risk Projects Card */}
+          <View style={styles.cardsRow}>
+            <View style={[styles.card, styles.cardGreen]}>
+              <View style={styles.cardHeaderRow}>
+                <View style={[styles.cardIconCircleGreen, { backgroundColor: riskColors.low }]}> 
+                  <SafeIcon name="check-circle" size={24} color="#fff" fallbackText="✓" />
+                </View>
+                <Text style={styles.cardTitle}>Low Risk Projects</Text>
+                <Text style={[styles.cardCountGreen, { color: riskColors.low }]}>{PROJECTS.filter(p => p.risk === 'low').length}</Text>
+              </View>
+              <Text style={[styles.cardStatusGreen, { color: riskColors.low }]}>Stable and on track</Text>
             </View>
-            <Text style={styles.cardTitle}>Low Risk Projects</Text>
-            <Text style={[styles.cardCountGreen, { color: riskColors.low }]}>{PROJECTS.filter(p => p.risk === 'low').length}</Text>
           </View>
-          <Text style={[styles.cardStatusGreen, { color: riskColors.low }]}>Stable and on track</Text>
-        </View>
-      </View>
 
-      <View style={{marginBottom: 24}}>
-        <View style={styles.allProjectsCard}>
-          <Text style={[styles.sectionTitle, { marginTop: 0, marginLeft: 16 }]}>All Projects</Text>
-          <TouchableOpacity style={styles.ssMenuIcon} onPress={() => setModalVisible(true)}>
-            <View style={styles.ssBar1} />
-            <View style={styles.ssBar2} />
-            <View style={styles.ssBar3} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.circleGrid}>
-          {filteredProjects.map((project, idx) => {
-            let cardStyle, labelStyle, labelText;
-            if (project.risk === 'high') {
-              cardStyle = [styles.circleRed, { backgroundColor: riskColors.high, borderColor: riskColors.high }];
-              labelStyle = styles.circleLabelRed;
-              labelText = 'High Risk';
-            } else if (project.risk === 'medium') {
-              cardStyle = [styles.circleYellow, { backgroundColor: riskColors.medium, borderColor: riskColors.medium }];
-              labelStyle = styles.circleLabelYellow;
-              labelText = 'Medium Risk';
-            } else {
-              cardStyle = [styles.circleGreen, { backgroundColor: riskColors.low, borderColor: riskColors.low }];
-              labelStyle = styles.circleLabelGreen;
-              labelText = 'Low Risk';
-            }
-            return (
-              <TouchableOpacity
-                key={idx}
-                style={[styles.circleCard, cardStyle]}
-                activeOpacity={0.8}
-                onPress={() => navigation.navigate('ProjectDetails', { project })}
-              >
-                <SafeIcon
-                  name={project.risk === 'high' ? 'alert-circle' : project.risk === 'medium' ? 'clock' : 'check-circle'}
-                  size={40}
-                  color="#fff"
-                  fallbackText={project.risk === 'high' ? '⚠' : project.risk === 'medium' ? '⏰' : '✓'}
-                />
-                <Text style={styles.circleTitle}>{project.name}</Text>
-                <View style={labelStyle}><Text style={styles.circleLabelText}>{labelText}</Text></View>
+          <View style={{marginBottom: 24}}>
+            <View style={styles.allProjectsCard}>
+              <Text style={[styles.sectionTitles, { marginTop: 0, marginLeft: 16 }]}>All Projects</Text>
+              <TouchableOpacity style={styles.ssMenuIcon} onPress={() => setModalVisible(true)}>
+                <View style={styles.ssBar1} />
+                <View style={styles.ssBar2} />
+                <View style={styles.ssBar3} />
               </TouchableOpacity>
-            );
-          })}
-        </View>
+            </View>
+            <View style={styles.circleGrid}>
+              {filteredProjects.map((project, idx) => {
+                let cardStyle, labelStyle, labelText;
+                if (project.risk === 'high') {
+                  cardStyle = [styles.circleRed, { backgroundColor: riskColors.high, borderColor: riskColors.high }];
+                  labelStyle = styles.circleLabelRed;
+                  labelText = 'High Risk';
+                } else if (project.risk === 'medium') {
+                  cardStyle = [styles.circleYellow, { backgroundColor: riskColors.medium, borderColor: riskColors.medium }];
+                  labelStyle = styles.circleLabelYellow;
+                  labelText = 'Medium Risk';
+                } else {
+                  cardStyle = [styles.circleGreen, { backgroundColor: riskColors.low, borderColor: riskColors.low }];
+                  labelStyle = styles.circleLabelGreen;
+                  labelText = 'Low Risk';
+                }
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[styles.circleCard, cardStyle]}
+                    activeOpacity={0.8}
+                    onPress={() => navigation.navigate('ProjectDetails', { project })}
+                  >
+                    <SafeIcon
+                      name={project.risk === 'high' ? 'alert-circle' : project.risk === 'medium' ? 'clock' : 'check-circle'}
+                      size={40}
+                      color="#fff"
+                      fallbackText={project.risk === 'high' ? '⚠' : project.risk === 'medium' ? '⏰' : '✓'}
+                    />
+                    <Text style={styles.circleTitle}>{project.name}</Text>
+                    <View style={labelStyle}><Text style={styles.circleLabelText}>{labelText}</Text></View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </ScrollView>
       </View>
-    </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    resizeMode: 'cover',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(24,52,90,0.85)', // same as Home page overlay
+  },
   allProjectsCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -221,14 +233,14 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'transparent',
     paddingHorizontal: 4,
     paddingTop: 10,
   },
   overviewTitle: {
     fontSize: 30,
     fontWeight: 'bold',
-    color: '#222',
+    color: 'white',
     textAlign: 'center',
     marginBottom: 4,
   },
@@ -246,10 +258,17 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 10,
   },
-  sectionTitle: {
+  sectionTitless: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#222',
+    color: 'white',
+    marginBottom: 8,
+    marginLeft: 2,
+  },
+  sectionTitles: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'rgba(30,41,59,0.85)',
     marginBottom: 8,
     marginLeft: 2,
   },
@@ -260,9 +279,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 0,
     gap: 12,
+    width: '100%',
   },
   card: {
-    width: '85%',
+    width: '94%', // Match allProjectsCard width
     minHeight: 70,
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -276,7 +296,7 @@ const styles = StyleSheet.create({
     elevation: 1,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    marginHorizontal: 0,
+    marginHorizontal: 8, // Match allProjectsCard margin
     marginVertical: 1,
   },
   cardRed: {
