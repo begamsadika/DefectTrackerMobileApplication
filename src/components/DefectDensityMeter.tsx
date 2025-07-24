@@ -5,23 +5,19 @@ import RNSpeedometer from 'react-native-speedometer';
 
 interface DefectDensityMeterProps {
   defectDensity?: number;
-  maxValue?: number;
 }
 
 const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
-  defectDensity = 8.00,
-  maxValue = 50
+  defectDensity = 8.00
 }) => {
   const [inputValue, setInputValue] = useState(defectDensity.toString());
   const currentValue = parseFloat(inputValue) || defectDensity;
 
-  // Determine status text and color based on value
+  // Determine status text and color based on value (Green: 1-7, Yellow: 7-10, Red: 10-12)
   const getStatusInfo = (value: number) => {
-    if (value <= 10) return { text: 'Very Good', color: '#22c55e' };
-    if (value <= 20) return { text: 'Good', color: '#84cc16' };
-    if (value <= 30) return { text: 'Average', color: '#facc15' };
-    if (value <= 40) return { text: 'Poor', color: '#f97316' };
-    return { text: 'Very Poor', color: '#ef4444' };
+    if (value < 7) return { text: 'Good', color: '#22c55e' };
+    if (value < 10) return { text: 'Average', color: '#facc15' };
+    return { text: 'Poor', color: '#ef4444' };
   };
 
   const statusInfo = getStatusInfo(currentValue);
@@ -30,35 +26,30 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Defect Density</Text>
+      {/* <Text style={styles.title}>Defect Density</Text> */}
 
       {/* Input for speedometer value */}
-      <TextInput
+      {/* <TextInput
         placeholder="Enter Density Value"
         style={styles.textInput}
         onChangeText={onChange}
         value={inputValue}
         keyboardType="numeric"
-      />
+      /> */}
 
       {/* React Native Speedometer */}
       <View style={styles.speedometerContainer}>
         <RNSpeedometer
-          value={currentValue}
+          value={Math.max(1, Math.min(currentValue, 12))}
           size={200}
-          minValue={0}
-          maxValue={maxValue}
+          minValue={1}
+          maxValue={12}
           allowedDecimals={2}
           labels={[
             {
-              name: 'Very Good',
+              name: 'Good',
               labelColor: '#22c55e',
               activeBarColor: '#22c55e',
-            },
-            {
-              name: 'Good',
-              labelColor: '#84cc16',
-              activeBarColor: '#84cc16',
             },
             {
               name: 'Average',
@@ -67,24 +58,13 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
             },
             {
               name: 'Poor',
-              labelColor: '#f97316',
-              activeBarColor: '#f97316',
-            },
-            {
-              name: 'Very Poor',
               labelColor: '#ef4444',
               activeBarColor: '#ef4444',
             },
           ]}
         />
 
-        {/* Status display below speedometer */}
-        <View style={styles.statusContainer}>
-          <Text style={styles.centerValue}>{currentValue.toFixed(2)}</Text>
-          <Text style={[styles.statusText, { color: statusInfo.color }]}>
-            {statusInfo.text}
-          </Text>
-        </View>
+      
       </View>
     </View>
   );
@@ -100,6 +80,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     elevation: 2,
     alignItems: 'center',
+    minHeight: 280,
+    justifyContent: 'center',
   },
   title: {
     fontWeight: 'bold',

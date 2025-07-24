@@ -179,13 +179,13 @@ const ProjectDetails = () => {
 
       {/* Summary Cards Row BELOW Defect Severity Breakdown */}
       <View style={styles.summaryCol}>
-        {/* Defect Density Card - Improved Usability */}
-        <View style={[styles.summaryCard, { paddingTop: 28, paddingBottom: 28 }]}> 
+        {/* Defect Density Card - Increased Y Axis Size */}
+        <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
           <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center' }}>
-            Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>37.42</Text>
+            Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
           </Text>
           {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
-          <DefectDensityMeter defectDensity={37.42} maxValue={50} />
+          <DefectDensityMeter defectDensity={4.36} />
         </View>
         {/* Defect Severity Index */}
         <View style={styles.summaryCard}>
