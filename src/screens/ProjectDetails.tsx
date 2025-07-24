@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
@@ -67,6 +67,8 @@ const riskColors = {
 };
 
 const ProjectDetails = () => {
+  const [showPieModal, setShowPieModal] = useState(false);
+  const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
   // @ts-ignore
   const { project: initialProject } = route.params || {};
@@ -149,7 +151,9 @@ const ProjectDetails = () => {
                   <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
                 ))}
               </View>
-
+              <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('high'); setShowPieModal(true); }}>
+                <Text style={styles.viewChartButtonText}>View Chart</Text>
+              </TouchableOpacity>
             </View>
             {/* Medium */}
             <View style={[styles.breakdownCard, { borderColor: riskColors.medium }]}> 
@@ -162,7 +166,9 @@ const ProjectDetails = () => {
                   <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
                 ))}
               </View>
-
+              <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('medium'); setShowPieModal(true); }}>
+                <Text style={styles.viewChartButtonText}>View Chart</Text>
+              </TouchableOpacity>
             </View>
             {/* Low */}
             <View style={[styles.breakdownCard, { borderColor: riskColors.low }]}> 
@@ -175,9 +181,39 @@ const ProjectDetails = () => {
                   <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
                 ))}
               </View>
-
+              <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('low'); setShowPieModal(true); }}>
+                <Text style={styles.viewChartButtonText}>View Chart</Text>
+              </TouchableOpacity>
             </View>
           </View>
+
+          {/* Modal for Pie Chart */}
+          <Modal
+            visible={showPieModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowPieModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Status Breakdown for {selectedSeverity.charAt(0).toUpperCase() + selectedSeverity.slice(1)}</Text>
+                <DefectPieChart
+                  title={null}
+                  data={DEFECTS[selectedSeverity].breakdown.map(item => ({
+                    label: item.label,
+                    value: item.count,
+                    color: item.color,
+                    percentage: DEFECTS[selectedSeverity].total > 0 ? (item.count / DEFECTS[selectedSeverity].total) * 100 : 0
+                  }))}
+                  totalLabel="TOTAL DEFECTS"
+                  totalValue={DEFECTS[selectedSeverity].total}
+                />
+                <TouchableOpacity style={styles.closeModalButton} onPress={() => setShowPieModal(false)}>
+                  <Text style={styles.closeModalButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           {/* Summary Cards Row BELOW Defect Severity Breakdown */}
           <View style={styles.summaryCol}>
@@ -334,6 +370,58 @@ const ProjectDetails = () => {
 };
 
 const styles = StyleSheet.create({
+  viewChartButton: {
+    backgroundColor: 'rgba(24,52,90,0.85)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    alignSelf: 'flex-end',
+    marginTop: 10,
+    marginBottom: 2,
+    elevation: 2,
+  },
+  viewChartButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40, // add vertical padding to reduce modal height
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 24,
+    minWidth: 100,
+    alignItems: 'center',
+    elevation: 8,
+    maxHeight: 640,
+    // paddingVertical: ,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'rgba(24,52,90,0.85)',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  closeModalButton: {
+    backgroundColor: 'rgba(24,52,90,0.85)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginTop: 18,
+    elevation: 2,
+  },
+  closeModalButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
   backgroundImage: {
     ...StyleSheet.absoluteFillObject,
     resizeMode: 'cover',
