@@ -88,6 +88,20 @@ const ProjectDetails = () => {
     { label: 'Validation', value: 103, color: '#ef4444', percentage: 22.4 },
   ];
 
+  // Pie chart data for "Defects by Module"
+  const defectsByModuleData = [
+    { label: 'Configurations', value: 77, color: '#3b82f6', percentage: 16.78 },
+    { label: 'Project Management', value: 53, color: '#22c55e', percentage: 11.55 },
+    { label: 'Bench', value: 58, color: '#facc15', percentage: 12.64 },
+    { label: 'Defects', value: 67, color: '#ef4444', percentage: 14.60 },
+    { label: 'Test Cases', value: 58, color: '#a78bfa', percentage: 12.64 },
+    { label: 'Employee', value: 67, color: '#06b6d4', percentage: 14.60 },
+    { label: 'Releases', value: 34, color: '#f97316', percentage: 7.41 },
+    { label: 'Project', value: 22, color: '#f43f5e', percentage: 4.79 },
+    { label: 'Main Template', value: 4, color: '#84cc16', percentage: 0.87 },
+    { label: 'Dashboard', value: 19, color: '#f87171', percentage: 4.14 },
+  ];
+
 
 
   return (
@@ -209,11 +223,7 @@ const ProjectDetails = () => {
 
       {/* Defect Analysis Charts */}
       <Text style={styles.breakdownTitle}>Defect Analysis</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chartsContainer}
-      >
+      <View style={{gap: 20, paddingHorizontal: 16, paddingVertical: 8}}>
         <DefectPieChart
           title="Defects Reopened Multiple Times"
           data={reopenedDefectsData}
@@ -228,7 +238,13 @@ const ProjectDetails = () => {
           mostCommonLabel="Most Common Functionality"
           mostCommonValue={245}
         />
-      </ScrollView>
+        <DefectPieChart
+          title="Defects by Module"
+          data={defectsByModuleData}
+          totalLabel="TOTAL DEFECTS"
+          totalValue={370}
+        />
+      </View>
     </ScrollView>
   );
 };
