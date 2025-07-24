@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import Svg, { G, Path } from 'react-native-svg';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Modal } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 
 const PROJECTS = [
@@ -69,12 +70,109 @@ const ProjectDetails = () => {
   // @ts-ignore
   const { project: initialProject } = route.params || {};
   const [selectedProject, setSelectedProject] = useState(initialProject || PROJECTS[0]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
 
   const risk = selectedProject.risk as 'high' | 'medium' | 'low';
   const defects = DEFECTS[risk];
 
+  const openChartModal = (severity: 'high' | 'medium' | 'low') => {
+    setSelectedSeverity(severity);
+    setModalVisible(true);
+  };
+
+  // Pie chart using react-native-svg and react-native-svg-charts
+
+  const renderPieChart = (data: any[]) => {
+    // Pie chart fallback using SVG
+    const total = data.reduce((sum, item) => sum + item.count, 0);
+    const radius = 80;
+    const center = radius + 10;
+    let cumulativeAngle = 0;
+    const slices = data.map((item, idx) => {
+      const value = item.count;
+      const angle = total ? (value / total) * 360 : 0;
+      const startAngle = cumulativeAngle;
+      const endAngle = cumulativeAngle + angle;
+      cumulativeAngle += angle;
+      // Convert angles to radians
+      const startRad = (Math.PI / 180) * startAngle;
+      const endRad = (Math.PI / 180) * endAngle;
+      // Calculate coordinates
+      const x1 = center + radius * Math.cos(startRad);
+      const y1 = center + radius * Math.sin(startRad);
+      const x2 = center + radius * Math.cos(endRad);
+      const y2 = center + radius * Math.sin(endRad);
+      // Large arc flag
+      const largeArcFlag = angle > 180 ? 1 : 0;
+      // Path string
+      const pathData = [
+        `M ${center} ${center}`,
+        `L ${x1} ${y1}`,
+        `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+        'Z',
+      ].join(' ');
+      return (
+        <Path key={item.label} d={pathData} fill={item.color} />
+      );
+    });
+    return (
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <Svg width={center * 2} height={center * 2}>
+          <G>{slices}</G>
+        </Svg>
+      </View>
+    );
+  };
+
+  const renderPieChartModal = () => {
+    const severityData = DEFECTS[selectedSeverity];
+    const filteredData = severityData.breakdown.filter(item => item.count > 0);
+
+    return (
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>
+              Status Breakdown for {selectedSeverity.charAt(0).toUpperCase() + selectedSeverity.slice(1)}
+            </Text>
+
+            {/* Pie chart removed as requested */}
+
+            {/* Legend row below chart, matching screenshot */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
+              {filteredData.map((item, idx) => (
+                <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', marginRight: 18, marginBottom: 8 }}>
+                  <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: item.color, marginRight: 6 }} />
+                  <Text style={{ fontSize: 15, color: '#222', fontWeight: 'bold' }}>{item.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    );
+  };
+
   return (
     <ScrollView style={styles.page}>
+      {renderPieChartModal()}
       {/* Project Selection Horizontal Scroll */}
       <View style={styles.selectorContainer}>
         <Text style={styles.selectorTitle}>Project Selection</Text>
@@ -115,7 +213,9 @@ const ProjectDetails = () => {
               <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
             ))}
           </View>
-          <TouchableOpacity style={styles.chartBtn}><Text style={styles.chartBtnText}>View Chart</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.chartBtn} onPress={() => openChartModal('high')}>
+            <Text style={styles.chartBtnText}>View Chart</Text>
+          </TouchableOpacity>
         </View>
         {/* Medium */}
         <View style={[styles.breakdownCard, { borderColor: riskColors.medium }]}> 
@@ -128,7 +228,9 @@ const ProjectDetails = () => {
               <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
             ))}
           </View>
-          <TouchableOpacity style={styles.chartBtn}><Text style={styles.chartBtnText}>View Chart</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.chartBtn} onPress={() => openChartModal('medium')}>
+            <Text style={styles.chartBtnText}>View Chart</Text>
+          </TouchableOpacity>
         </View>
         {/* Low */}
         <View style={[styles.breakdownCard, { borderColor: riskColors.low }]}> 
@@ -141,7 +243,9 @@ const ProjectDetails = () => {
               <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
             ))}
           </View>
-          <TouchableOpacity style={styles.chartBtn}><Text style={styles.chartBtnText}>View Chart</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.chartBtn} onPress={() => openChartModal('low')}>
+            <Text style={styles.chartBtnText}>View Chart</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -542,6 +646,99 @@ const styles = StyleSheet.create({
     color: '#2563eb',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#64748b',
+    fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  chartContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  legendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  legendText: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  pieChartContainer: {
+    width: 200,
+    alignItems: 'center',
+  },
+  pieSliceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    width: '100%',
+  },
+  pieSlice: {
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  pieSliceText: {
+    fontSize: 12,
+    color: '#374151',
+    fontWeight: '500',
+    flex: 1,
   },
 });
 
