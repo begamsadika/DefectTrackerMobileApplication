@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
+import DefectDensityMeter from '../components/DefectDensityMeter';
 
 const PROJECTS = [
   { name: 'Defect Tracker', risk: 'high' },
@@ -178,26 +178,13 @@ const ProjectDetails = () => {
 
       {/* Summary Cards Row BELOW Defect Severity Breakdown */}
       <View style={styles.summaryCol}>
-        {/* Defect Density */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Defect Density</Text>
-          <View style={{ alignItems: 'center', marginTop: 12 }}>
-            <Text style={styles.summaryLabel}>Defect Density: <Text style={styles.densityValue}>8.00</Text></Text>
-            {/* Simple Gauge Representation */}
-            <View style={styles.gaugeWrap}>
-              <View style={styles.gaugeBase}>
-                <View style={[styles.gaugeArc, styles.gaugeArcGreen]} />
-                <View style={[styles.gaugeArc, styles.gaugeArcYellow]} />
-                <View style={[styles.gaugeArc, styles.gaugeArcRed]} />
-                <View style={styles.gaugeNeedle} />
-              </View>
-              <View style={styles.gaugeLabels}>
-                <Text style={styles.gaugeLabel}>0</Text>
-                <Text style={styles.gaugeLabel}>7</Text>
-                <Text style={styles.gaugeLabel}>10</Text>
-              </View>
-            </View>
-          </View>
+        {/* Defect Density Card - Improved Usability */}
+        <View style={[styles.summaryCard, { paddingTop: 28, paddingBottom: 28 }]}> 
+          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center' }}>
+            Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>37.42</Text>
+          </Text>
+          {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
+          <DefectDensityMeter defectDensity={37.42} maxValue={50} />
         </View>
         {/* Defect Severity Index */}
         <View style={styles.summaryCard}>
@@ -245,6 +232,28 @@ const ProjectDetails = () => {
           totalValue={370}
         />
       </View>
+
+      {/* Time to Find/Fix Defects Charts */}
+      <View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16, marginBottom: 24 }}>
+        <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 18, elevation: 2 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#222', marginBottom: 8 }}>Time to Find Defects</Text>
+          {/* Replace below with actual chart component if available */}
+          <Text style={{ color: '#64748b', marginBottom: 8 }}>Defects Count</Text>
+          <View style={{ height: 180, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 12 }}>
+            <Text style={{ color: '#2563eb' }}>[Line Chart Placeholder]</Text>
+          </View>
+          <Text style={{ color: '#64748b', marginTop: 8, textAlign: 'center' }}>Time (Day)</Text>
+        </View>
+        <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 18, elevation: 2 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#222', marginBottom: 8 }}>Time to Fix Defects</Text>
+          {/* Replace below with actual chart component if available */}
+          <Text style={{ color: '#64748b', marginBottom: 8 }}>Defects Count</Text>
+          <View style={{ height: 180, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 12 }}>
+            <Text style={{ color: '#22c55e' }}>[Line Chart Placeholder]</Text>
+          </View>
+          <Text style={{ color: '#64748b', marginTop: 8, textAlign: 'center' }}>Time (Day)</Text>
+        </View>
+      </View>
     </ScrollView>
   );
 };
@@ -283,81 +292,8 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     alignSelf: 'flex-start',
   },
-  summaryLabel: {
-    fontSize: 16,
-    color: '#222',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  densityValue: {
-    color: '#facc15',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  gaugeWrap: {
-    marginTop: 8,
-    alignItems: 'center',
-    width: 120,
-    height: 70,
-  },
-  gaugeBase: {
-    position: 'relative',
-    width: 120,
-    height: 60,
-    overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gaugeArc: {
-    position: 'absolute',
-    width: 120,
-    height: 60,
-    borderTopLeftRadius: 120,
-    borderTopRightRadius: 120,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
-    borderWidth: 10,
-    borderColor: 'transparent',
-    borderTopColor: '#eee',
-  },
-  gaugeArcGreen: {
-    borderTopColor: '#22c55e',
-    left: 0,
-    top: 0,
-    width: 40,
-  },
-  gaugeArcYellow: {
-    borderTopColor: '#facc15',
-    left: 40,
-    top: 0,
-    width: 40,
-  },
-  gaugeArcRed: {
-    borderTopColor: '#ef4444',
-    left: 80,
-    top: 0,
-    width: 40,
-  },
-  gaugeNeedle: {
-    position: 'absolute',
-    left: 60,
-    top: 10,
-    width: 2,
-    height: 40,
-    backgroundColor: '#222',
-    borderRadius: 2,
-  },
-  gaugeLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 120,
-    marginTop: 2,
-  },
-  gaugeLabel: {
-    fontSize: 13,
-    color: '#222',
-    fontWeight: 'bold',
-  },
+
+
   severityBarWrap: {
     width: 18,
     height: 70,
