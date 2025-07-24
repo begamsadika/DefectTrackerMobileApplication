@@ -183,7 +183,7 @@ const ProjectDetails = () => {
           <View style={styles.summaryCol}>
             {/* Defect Density Card - Increased Y Axis Size */}
             <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
-              <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center' }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center', color:'rgba(24,52,90,0.85)'}}>
                 Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontWeight: 'bold',
     fontSize: 18,
-    color: '#222',
+    color: 'rgba(24,52,90,0.85)',
     marginBottom: 4,
     textAlign: 'left',
     alignSelf: 'flex-start',
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#222',
+    color: 'rgba(24,52,90,0.85)',
   },
   selectorScroll: {
     flexDirection: 'row',
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   chipActive: {
-    backgroundColor: '#6366f1',
+    backgroundColor: 'rgba(24,52,90,0.85)',
     elevation: 3,
   },
   chipText: {
@@ -557,9 +557,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   projectTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#222',
+    color: 'rgba(24,52,90,0.85)',
   },
   statusCard: {
     paddingHorizontal: 18,
@@ -575,7 +575,8 @@ const styles = StyleSheet.create({
   breakdownTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#222',
+    color: 'white',
+    marginTop:16,
     marginLeft: 18,
     marginBottom: 12,
   },
@@ -583,7 +584,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     marginHorizontal: 8,
     marginBottom: 24,
-    gap: 12,
+    gap: 16,
   },
   breakdownCard: {
     backgroundColor: '#fff',
