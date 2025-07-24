@@ -102,7 +102,7 @@ const Dashboard = () => {
             <View style={[styles.card, styles.cardRed]}>
               <View style={styles.cardHeaderRow}>
                 <View style={[styles.cardIconCircleRedCustom, { backgroundColor: riskColors.high }]}> 
-                  <SafeIcon name="alert-circle" size={24} color="#fff" fallbackText="⚠" />
+                  <SafeIcon name="alert-circle" size={26} color="#fff" fallbackText="⚠" />
                 </View>
                 <Text style={styles.cardTitle}>High Risk Projects</Text>
                 <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{PROJECTS.filter(p => p.risk === 'high').length}</Text>
@@ -225,8 +225,8 @@ const styles = StyleSheet.create({
   },
   cardIconCircleRedCustom: {
     borderRadius: 50,
-    width: 28,
-    height: 28,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 4,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 2,
     elevation: 1,
-    borderWidth: 1,
+    borderWidth: 4,
     borderColor: '#e5e7eb',
     marginHorizontal: 8, // Match allProjectsCard margin
     marginVertical: 1,
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#222',
+    color: 'rgba(30,41,59,0.85)',
     marginBottom: 2,
     textAlign: 'center',
   },
