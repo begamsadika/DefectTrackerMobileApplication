@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from '
 import { useRoute } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
+import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 
 const PROJECTS = [
   { name: 'Defect Tracker', risk: 'high' },
@@ -234,24 +235,94 @@ const ProjectDetails = () => {
       </View>
 
       {/* Time to Find/Fix Defects Charts */}
-      <View style={{ flexDirection: 'row', gap: 16, paddingHorizontal: 16, marginBottom: 24 }}>
-        <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 18, elevation: 2 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#222', marginBottom: 8 }}>Time to Find Defects</Text>
-          {/* Replace below with actual chart component if available */}
-          <Text style={{ color: '#64748b', marginBottom: 8 }}>Defects Count</Text>
-          <View style={{ height: 180, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 12 }}>
-            <Text style={{ color: '#2563eb' }}>[Line Chart Placeholder]</Text>
-          </View>
-          <Text style={{ color: '#64748b', marginTop: 8, textAlign: 'center' }}>Time (Day)</Text>
+      {/* Time to Find Defects Line Chart (Single) */}
+      <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Find Defects</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Svg width={320} height={213}>
+            {/* Axes */}
+            <Path d="M40,180 L300,180" stroke="#222" strokeWidth={2} />
+            <Path d="M40,180 L40,30" stroke="#222" strokeWidth={2} />
+            {/* Grid lines */}
+            {[1,2,3,4].map(i => (
+              <Path key={i} d={`M40,${180-i*30} L300,${180-i*30}`} stroke="#e5e7eb" strokeWidth={1} />
+            ))}
+            {/* Dummy data points */}
+            {(() => {
+              const data = [2,3,1,4,2,3,2,1,2,1];
+              const points = data.map((v,i) => {
+                const x = 40 + (260/9)*i;
+                const y = 180 - (v-1)*37.5;
+                return { x, y };
+              });
+              // Line path
+              const linePath = points.map((p,i) => i===0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+              return (
+                <>
+                  <Path d={linePath} stroke="#2563eb" strokeWidth={3} fill="none" />
+                  {points.map((p,i) => (
+                    <Circle key={i} cx={p.x} cy={p.y} r={6} fill="#2563eb" stroke="#fff" strokeWidth={2} />
+                  ))}
+                </>
+              );
+            })()}
+            {/* Y axis labels */}
+            {[1,2,3,4,5].map(i => (
+              <SvgText key={i} x={10} y={180-(i-1)*30+6} fontSize={15} fill="#64748b">{i}</SvgText>
+            ))}
+            {/* X axis labels */}
+            {Array.from({length:10}).map((_,i) => (
+              <SvgText key={i} x={40+(260/9)*i-12} y={195} fontSize={9} fill="#64748b">Day {i+1}</SvgText>
+            ))}
+            {/* Axis titles */}
+            <SvgText x={-25} y={9} fontSize={10} fill="#64748b" rotation={-90} textAnchor="middle">Def Count</SvgText>
+            <SvgText x={152} y={210} fontSize={11} fill="#64748b" textAnchor="middle">Time (Day)</SvgText>
+          </Svg>
         </View>
-        <View style={{ flex: 1, backgroundColor: '#fff', borderRadius: 16, padding: 18, elevation: 2 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#222', marginBottom: 8 }}>Time to Fix Defects</Text>
-          {/* Replace below with actual chart component if available */}
-          <Text style={{ color: '#64748b', marginBottom: 8 }}>Defects Count</Text>
-          <View style={{ height: 180, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6', borderRadius: 12 }}>
-            <Text style={{ color: '#22c55e' }}>[Line Chart Placeholder]</Text>
-          </View>
-          <Text style={{ color: '#64748b', marginTop: 8, textAlign: 'center' }}>Time (Day)</Text>
+      </View>
+      {/* Time to Fix Defects Line Chart (Single) */}
+      <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Fix Defects</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Svg width={320} height={215}>
+            {/* Axes */}
+            <Path d="M40,180 L300,180" stroke="#222" strokeWidth={2} />
+            <Path d="M40,180 L40,30" stroke="#222" strokeWidth={2} />
+            {/* Grid lines */}
+            {[1,2,3,4].map(i => (
+              <Path key={i} d={`M40,${180-i*30} L300,${180-i*30}`} stroke="#e5e7eb" strokeWidth={1} />
+            ))}
+            {/* Dummy data points */}
+            {(() => {
+              const data = [3,2,4,3,2,3,2,2,1,2];
+              const points = data.map((v,i) => {
+                const x = 40 + (260/9)*i;
+                const y = 180 - (v-1)*37.5;
+                return { x, y };
+              });
+              // Line path
+              const linePath = points.map((p,i) => i===0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+              return (
+                <>
+                  <Path d={linePath} stroke="#22c55e" strokeWidth={3} fill="none" />
+                  {points.map((p,i) => (
+                    <Circle key={i} cx={p.x} cy={p.y} r={6} fill="#22c55e" stroke="#fff" strokeWidth={2} />
+                  ))}
+                </>
+              );
+            })()}
+            {/* Y axis labels */}
+            {[1,2,3,4,5].map(i => (
+              <SvgText key={i} x={10} y={180-(i-1)*30+6} fontSize={15} fill="#64748b">{i}</SvgText>
+            ))}
+            {/* X axis labels */}
+            {Array.from({length:10}).map((_,i) => (
+              <SvgText key={i} x={40+(260/9)*i-12} y={195} fontSize={9} fill="#64748b">Day {i+1}</SvgText>
+            ))}
+            {/* Axis titles */}
+            <SvgText x={-45} y={9} fontSize={10} fill="#64748b" rotation={-90}>Def Count</SvgText>
+            <SvgText x={122} y={210} fontSize={11} fill="#64748b">Time (Day)</SvgText>
+          </Svg>
         </View>
       </View>
     </ScrollView>
