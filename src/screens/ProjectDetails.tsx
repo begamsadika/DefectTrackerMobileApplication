@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
@@ -106,230 +106,248 @@ const ProjectDetails = () => {
 
 
   return (
-    <ScrollView style={styles.page}>
-      {/* Project Selection Horizontal Scroll */}
-      <View style={styles.selectorContainer}>
-        <Text style={styles.selectorTitle}>Project Selection</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
-          {PROJECTS.map((proj, idx) => (
-            <TouchableOpacity
-              key={proj.name + idx}
-              style={[styles.chip, selectedProject.name === proj.name ? styles.chipActive : null]}
-              onPress={() => setSelectedProject(proj)}
-            >
-              <Text style={[styles.chipText, selectedProject.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
-            </TouchableOpacity>
-          ))}
+    <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
+      <View style={styles.overlay}>
+        <ScrollView style={styles.container}>
+          {/* Project Selection Horizontal Scroll */}
+          <View style={styles.selectorContainer}>
+            <Text style={styles.selectorTitle}>Project Selection</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+              {PROJECTS.map((proj, idx) => (
+                <TouchableOpacity
+                  key={proj.name + idx}
+                  style={[styles.chip, selectedProject.name === proj.name ? styles.chipActive : null]}
+                  onPress={() => setSelectedProject(proj)}
+                >
+                  <Text style={[styles.chipText, selectedProject.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Project Info Card */}
+          <View style={styles.infoCard}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={styles.projectTitle}>{selectedProject.name}</Text>
+              <View style={[styles.statusCard, { backgroundColor: riskColors[risk as 'high' | 'medium' | 'low'] + '22' }]}> 
+                <Text style={[styles.statusText, { color: riskColors[risk as 'high' | 'medium' | 'low'] }]}>{riskLabels[risk as 'high' | 'medium' | 'low']}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Defect Severity Breakdown */}
+          <Text style={styles.breakdownTitle}>Defect Severity Breakdown</Text>
+          <View style={styles.breakdownCol}>
+            {/* High */}
+            <View style={[styles.breakdownCard, { borderColor: riskColors.high }]}> 
+              <View style={styles.breakdownCardHeader}>
+                <Text style={[styles.breakdownCardTitle, { color: riskColors.high }]}>Defects on High</Text>
+                <Text style={styles.breakdownTotal}>Total: {DEFECTS.high.total}</Text>
+              </View>
+              <View style={styles.breakdownList}>
+                {DEFECTS.high.breakdown.map((item, i) => (
+                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                ))}
+              </View>
+
+            </View>
+            {/* Medium */}
+            <View style={[styles.breakdownCard, { borderColor: riskColors.medium }]}> 
+              <View style={styles.breakdownCardHeader}>
+                <Text style={[styles.breakdownCardTitle, { color: riskColors.medium }]}>Defects on Medium</Text>
+                <Text style={styles.breakdownTotal}>Total: {DEFECTS.medium.total}</Text>
+              </View>
+              <View style={styles.breakdownList}>
+                {DEFECTS.medium.breakdown.map((item, i) => (
+                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                ))}
+              </View>
+
+            </View>
+            {/* Low */}
+            <View style={[styles.breakdownCard, { borderColor: riskColors.low }]}> 
+              <View style={styles.breakdownCardHeader}>
+                <Text style={[styles.breakdownCardTitle, { color: riskColors.low }]}>Defects on Low</Text>
+                <Text style={styles.breakdownTotal}>Total: {DEFECTS.low.total}</Text>
+              </View>
+              <View style={styles.breakdownList}>
+                {DEFECTS.low.breakdown.map((item, i) => (
+                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                ))}
+              </View>
+
+            </View>
+          </View>
+
+          {/* Summary Cards Row BELOW Defect Severity Breakdown */}
+          <View style={styles.summaryCol}>
+            {/* Defect Density Card - Increased Y Axis Size */}
+            <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
+              <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center' }}>
+                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
+              </Text>
+              {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
+              <DefectDensityMeter defectDensity={4.36} />
+            </View>
+            {/* Defect Severity Index */}
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Defect Severity Index</Text>
+              <View style={{ alignItems: 'center', marginTop: 12 }}>
+                <View style={styles.severityBarWrap}>
+                  <View style={styles.severityBar} />
+                </View>
+                <Text style={styles.severityValue}>135.9</Text>
+                <Text style={styles.severityDesc}>Weighted severity score (higher = more severe defects)</Text>
+              </View>
+            </View>
+            {/* Defect to Remark Ratio */}
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
+              <View style={styles.ratioBox}>
+                <Text style={styles.ratioValue}>44.44%</Text>
+                <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
+                <View style={styles.ratioBadge}><Text style={styles.ratioBadgeText}>High</Text></View>
+              </View>
+            </View>
+          </View>
+
+          {/* Defect Analysis Charts */}
+          <Text style={styles.breakdownTitle}>Defect Analysis</Text>
+          <View style={{gap: 20, paddingHorizontal: 16, paddingVertical: 8}}>
+            <DefectPieChart
+              title="Defects Reopened Multiple Times"
+              data={reopenedDefectsData}
+              totalLabel="TOTAL DEFECTS"
+              totalValue={220}
+            />
+            <DefectPieChart
+              title="Defect Distribution by Type"
+              data={defectTypeData}
+              totalLabel="TOTAL DEFECTS"
+              totalValue={459}
+              mostCommonLabel="Most Common Functionality"
+              mostCommonValue={245}
+            />
+            <DefectPieChart
+              title="Defects by Module"
+              data={defectsByModuleData}
+              totalLabel="TOTAL DEFECTS"
+              totalValue={370}
+            />
+          </View>
+
+          {/* Time to Find/Fix Defects Charts */}
+          {/* Time to Find Defects Line Chart (Single) */}
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Find Defects</Text>
+            <View style={{ alignItems: 'center' }}>
+              <Svg width={320} height={213}>
+                {/* Axes */}
+                <Path d="M40,180 L300,180" stroke="#222" strokeWidth={2} />
+                <Path d="M40,180 L40,30" stroke="#222" strokeWidth={2} />
+                {/* Grid lines */}
+                {[1,2,3,4].map(i => (
+                  <Path key={i} d={`M40,${180-i*30} L300,${180-i*30}`} stroke="#e5e7eb" strokeWidth={1} />
+                ))}
+                {/* Dummy data points */}
+                {(() => {
+                  const data = [2,3,1,4,2,3,2,1,2,1];
+                  const points = data.map((v,i) => {
+                    const x = 40 + (260/9)*i;
+                    const y = 180 - (v-1)*37.5;
+                    return { x, y };
+                  });
+                  // Line path
+                  const linePath = points.map((p,i) => i===0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+                  return (
+                    <>
+                      <Path d={linePath} stroke="#2563eb" strokeWidth={3} fill="none" />
+                      {points.map((p,i) => (
+                        <Circle key={i} cx={p.x} cy={p.y} r={6} fill="#2563eb" stroke="#fff" strokeWidth={2} />
+                      ))}
+                    </>
+                  );
+                })()}
+                {/* Y axis labels */}
+                {[1,2,3,4,5].map(i => (
+                  <SvgText key={i} x={10} y={180-(i-1)*30+6} fontSize={15} fill="#64748b">{i}</SvgText>
+                ))}
+                {/* X axis labels */}
+                {Array.from({length:10}).map((_,i) => (
+                  <SvgText key={i} x={40+(260/9)*i-12} y={195} fontSize={9} fill="#64748b">Day {i+1}</SvgText>
+                ))}
+                {/* Axis titles */}
+                <SvgText x={-25} y={9} fontSize={10} fill="#64748b" rotation={-90} textAnchor="middle">Def Count</SvgText>
+                <SvgText x={152} y={210} fontSize={11} fill="#64748b" textAnchor="middle">Time (Day)</SvgText>
+              </Svg>
+            </View>
+          </View>
+          {/* Time to Fix Defects Line Chart (Single) */}
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Fix Defects</Text>
+            <View style={{ alignItems: 'center' }}>
+              <Svg width={320} height={215}>
+                {/* Axes */}
+                <Path d="M40,180 L300,180" stroke="#222" strokeWidth={2} />
+                <Path d="M40,180 L40,30" stroke="#222" strokeWidth={2} />
+                {/* Grid lines */}
+                {[1,2,3,4].map(i => (
+                  <Path key={i} d={`M40,${180-i*30} L300,${180-i*30}`} stroke="#e5e7eb" strokeWidth={1} />
+                ))}
+                {/* Dummy data points */}
+                {(() => {
+                  const data = [3,2,4,3,2,3,2,2,1,2];
+                  const points = data.map((v,i) => {
+                    const x = 40 + (260/9)*i;
+                    const y = 180 - (v-1)*37.5;
+                    return { x, y };
+                  });
+                  // Line path
+                  const linePath = points.map((p,i) => i===0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
+                  return (
+                    <>
+                      <Path d={linePath} stroke="#22c55e" strokeWidth={3} fill="none" />
+                      {points.map((p,i) => (
+                        <Circle key={i} cx={p.x} cy={p.y} r={6} fill="#22c55e" stroke="#fff" strokeWidth={2} />
+                      ))}
+                    </>
+                  );
+                })()}
+                {/* Y axis labels */}
+                {[1,2,3,4,5].map(i => (
+                  <SvgText key={i} x={10} y={180-(i-1)*30+6} fontSize={15} fill="#64748b">{i}</SvgText>
+                ))}
+                {/* X axis labels */}
+                {Array.from({length:10}).map((_,i) => (
+                  <SvgText key={i} x={40+(260/9)*i-12} y={195} fontSize={9} fill="#64748b">Day {i+1}</SvgText>
+                ))}
+                {/* Axis titles */}
+                <SvgText x={-45} y={9} fontSize={10} fill="#64748b" rotation={-90}>Def Count</SvgText>
+                <SvgText x={122} y={210} fontSize={11} fill="#64748b">Time (Day)</SvgText>
+              </Svg>
+            </View>
+          </View>
         </ScrollView>
       </View>
-
-      {/* Project Info Card */}
-      <View style={styles.infoCard}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={styles.projectTitle}>{selectedProject.name}</Text>
-          <View style={[styles.statusCard, { backgroundColor: riskColors[risk as 'high' | 'medium' | 'low'] + '22' }]}> 
-            <Text style={[styles.statusText, { color: riskColors[risk as 'high' | 'medium' | 'low'] }]}>{riskLabels[risk as 'high' | 'medium' | 'low']}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Defect Severity Breakdown */}
-      <Text style={styles.breakdownTitle}>Defect Severity Breakdown</Text>
-      <View style={styles.breakdownCol}>
-        {/* High */}
-        <View style={[styles.breakdownCard, { borderColor: riskColors.high }]}> 
-          <View style={styles.breakdownCardHeader}>
-            <Text style={[styles.breakdownCardTitle, { color: riskColors.high }]}>Defects on High</Text>
-            <Text style={styles.breakdownTotal}>Total: {DEFECTS.high.total}</Text>
-          </View>
-          <View style={styles.breakdownList}>
-            {DEFECTS.high.breakdown.map((item, i) => (
-              <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-            ))}
-          </View>
-
-        </View>
-        {/* Medium */}
-        <View style={[styles.breakdownCard, { borderColor: riskColors.medium }]}> 
-          <View style={styles.breakdownCardHeader}>
-            <Text style={[styles.breakdownCardTitle, { color: riskColors.medium }]}>Defects on Medium</Text>
-            <Text style={styles.breakdownTotal}>Total: {DEFECTS.medium.total}</Text>
-          </View>
-          <View style={styles.breakdownList}>
-            {DEFECTS.medium.breakdown.map((item, i) => (
-              <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-            ))}
-          </View>
-
-        </View>
-        {/* Low */}
-        <View style={[styles.breakdownCard, { borderColor: riskColors.low }]}> 
-          <View style={styles.breakdownCardHeader}>
-            <Text style={[styles.breakdownCardTitle, { color: riskColors.low }]}>Defects on Low</Text>
-            <Text style={styles.breakdownTotal}>Total: {DEFECTS.low.total}</Text>
-          </View>
-          <View style={styles.breakdownList}>
-            {DEFECTS.low.breakdown.map((item, i) => (
-              <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-            ))}
-          </View>
-
-        </View>
-      </View>
-
-      {/* Summary Cards Row BELOW Defect Severity Breakdown */}
-      <View style={styles.summaryCol}>
-        {/* Defect Density Card - Increased Y Axis Size */}
-        <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
-          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center' }}>
-            Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
-          </Text>
-          {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
-          <DefectDensityMeter defectDensity={4.36} />
-        </View>
-        {/* Defect Severity Index */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Defect Severity Index</Text>
-          <View style={{ alignItems: 'center', marginTop: 12 }}>
-            <View style={styles.severityBarWrap}>
-              <View style={styles.severityBar} />
-            </View>
-            <Text style={styles.severityValue}>135.9</Text>
-            <Text style={styles.severityDesc}>Weighted severity score (higher = more severe defects)</Text>
-          </View>
-        </View>
-        {/* Defect to Remark Ratio */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
-          <View style={styles.ratioBox}>
-            <Text style={styles.ratioValue}>44.44%</Text>
-            <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
-            <View style={styles.ratioBadge}><Text style={styles.ratioBadgeText}>High</Text></View>
-          </View>
-        </View>
-      </View>
-
-      {/* Defect Analysis Charts */}
-      <Text style={styles.breakdownTitle}>Defect Analysis</Text>
-      <View style={{gap: 20, paddingHorizontal: 16, paddingVertical: 8}}>
-        <DefectPieChart
-          title="Defects Reopened Multiple Times"
-          data={reopenedDefectsData}
-          totalLabel="TOTAL DEFECTS"
-          totalValue={220}
-        />
-        <DefectPieChart
-          title="Defect Distribution by Type"
-          data={defectTypeData}
-          totalLabel="TOTAL DEFECTS"
-          totalValue={459}
-          mostCommonLabel="Most Common Functionality"
-          mostCommonValue={245}
-        />
-        <DefectPieChart
-          title="Defects by Module"
-          data={defectsByModuleData}
-          totalLabel="TOTAL DEFECTS"
-          totalValue={370}
-        />
-      </View>
-
-      {/* Time to Find/Fix Defects Charts */}
-      {/* Time to Find Defects Line Chart (Single) */}
-      <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Find Defects</Text>
-        <View style={{ alignItems: 'center' }}>
-          <Svg width={320} height={213}>
-            {/* Axes */}
-            <Path d="M40,180 L300,180" stroke="#222" strokeWidth={2} />
-            <Path d="M40,180 L40,30" stroke="#222" strokeWidth={2} />
-            {/* Grid lines */}
-            {[1,2,3,4].map(i => (
-              <Path key={i} d={`M40,${180-i*30} L300,${180-i*30}`} stroke="#e5e7eb" strokeWidth={1} />
-            ))}
-            {/* Dummy data points */}
-            {(() => {
-              const data = [2,3,1,4,2,3,2,1,2,1];
-              const points = data.map((v,i) => {
-                const x = 40 + (260/9)*i;
-                const y = 180 - (v-1)*37.5;
-                return { x, y };
-              });
-              // Line path
-              const linePath = points.map((p,i) => i===0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
-              return (
-                <>
-                  <Path d={linePath} stroke="#2563eb" strokeWidth={3} fill="none" />
-                  {points.map((p,i) => (
-                    <Circle key={i} cx={p.x} cy={p.y} r={6} fill="#2563eb" stroke="#fff" strokeWidth={2} />
-                  ))}
-                </>
-              );
-            })()}
-            {/* Y axis labels */}
-            {[1,2,3,4,5].map(i => (
-              <SvgText key={i} x={10} y={180-(i-1)*30+6} fontSize={15} fill="#64748b">{i}</SvgText>
-            ))}
-            {/* X axis labels */}
-            {Array.from({length:10}).map((_,i) => (
-              <SvgText key={i} x={40+(260/9)*i-12} y={195} fontSize={9} fill="#64748b">Day {i+1}</SvgText>
-            ))}
-            {/* Axis titles */}
-            <SvgText x={-25} y={9} fontSize={10} fill="#64748b" rotation={-90} textAnchor="middle">Def Count</SvgText>
-            <SvgText x={152} y={210} fontSize={11} fill="#64748b" textAnchor="middle">Time (Day)</SvgText>
-          </Svg>
-        </View>
-      </View>
-      {/* Time to Fix Defects Line Chart (Single) */}
-      <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Fix Defects</Text>
-        <View style={{ alignItems: 'center' }}>
-          <Svg width={320} height={215}>
-            {/* Axes */}
-            <Path d="M40,180 L300,180" stroke="#222" strokeWidth={2} />
-            <Path d="M40,180 L40,30" stroke="#222" strokeWidth={2} />
-            {/* Grid lines */}
-            {[1,2,3,4].map(i => (
-              <Path key={i} d={`M40,${180-i*30} L300,${180-i*30}`} stroke="#e5e7eb" strokeWidth={1} />
-            ))}
-            {/* Dummy data points */}
-            {(() => {
-              const data = [3,2,4,3,2,3,2,2,1,2];
-              const points = data.map((v,i) => {
-                const x = 40 + (260/9)*i;
-                const y = 180 - (v-1)*37.5;
-                return { x, y };
-              });
-              // Line path
-              const linePath = points.map((p,i) => i===0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join(' ');
-              return (
-                <>
-                  <Path d={linePath} stroke="#22c55e" strokeWidth={3} fill="none" />
-                  {points.map((p,i) => (
-                    <Circle key={i} cx={p.x} cy={p.y} r={6} fill="#22c55e" stroke="#fff" strokeWidth={2} />
-                  ))}
-                </>
-              );
-            })()}
-            {/* Y axis labels */}
-            {[1,2,3,4,5].map(i => (
-              <SvgText key={i} x={10} y={180-(i-1)*30+6} fontSize={15} fill="#64748b">{i}</SvgText>
-            ))}
-            {/* X axis labels */}
-            {Array.from({length:10}).map((_,i) => (
-              <SvgText key={i} x={40+(260/9)*i-12} y={195} fontSize={9} fill="#64748b">Day {i+1}</SvgText>
-            ))}
-            {/* Axis titles */}
-            <SvgText x={-45} y={9} fontSize={10} fill="#64748b" rotation={-90}>Def Count</SvgText>
-            <SvgText x={122} y={210} fontSize={11} fill="#64748b">Time (Day)</SvgText>
-          </Svg>
-        </View>
-      </View>
-    </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    resizeMode: 'cover',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(24,52,90,0.85)', // semi-transparent overlay
+  },
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent', // important for the image to show through
+    paddingHorizontal: 4,
+    paddingTop: 10,
+  },
   summaryCol: {
     flexDirection: 'column',
     gap: 16,
