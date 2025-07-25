@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackground, Image, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { useNavigation } from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 
 // Icon component with fallback
@@ -64,6 +64,12 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
+      {/* Back button at the top */}
+      <View style={{ paddingTop: 18, paddingLeft: 8, paddingBottom: 2 }}>
+        <TouchableOpacity style={styles.backIconWrap} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Modal
           visible={modalVisible}
@@ -186,7 +192,101 @@ const Dashboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'white',
+  },
+  headerBg: {
+    width: '100%',
+    marginTop: 0,
+    paddingTop: 24,
+    paddingBottom: 32,
+    paddingHorizontal: 0,
+    backgroundColor: 'rgba(24,52,90,0.85)',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+  },
+
+  heading: {
+  color: '#fff',
+  fontSize: 28,
+  fontWeight: '500',
+  textAlign: 'center',      // Center the text horizontally
+  marginTop: 4,
+  
+},
+
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    marginTop: 4,
+    justifyContent: 'space-between',
+  },
+  headerLeftBelowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 18,
+    marginTop: 2,
+    gap: 8,
+  },
+  backIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerContent: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+  },
+  profileImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  headerWelcome: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  headerName: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '400',
+  },
+  searchBarWrap: {
+    marginTop: 12,
+    backgroundColor: '#f5f6fa',
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    height: 48,
+    width: '100%',
+    alignSelf: 'center',
+    position: 'relative',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#222',
+    paddingLeft: 8,
+    paddingRight: 36,
+    backgroundColor: 'transparent',
+    height: 48,
+  },
+  searchIcon: {
+    position: 'absolute',
+    right: 18,
+    top: 13,
   },
   scrollView: {
     flex: 1,

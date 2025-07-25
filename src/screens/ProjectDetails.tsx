@@ -290,7 +290,7 @@ const ProjectDetails = () => {
           {/* Time to Find/Fix Defects Charts */}
           {/* Time to Find Defects Line Chart (Single) */}
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Find Defects</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'rgba(24,52,90,0.85)', marginBottom: 12 }}>Time to Find Defects</Text>
             <View style={{ alignItems: 'center' }}>
               <Svg width={320} height={213}>
                 {/* Axes */}
@@ -335,7 +335,7 @@ const ProjectDetails = () => {
           </View>
           {/* Time to Fix Defects Line Chart (Single) */}
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 12 }}>Time to Fix Defects</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'rgba(24,52,90,0.85)', marginBottom: 12 }}>Time to Fix Defects</Text>
             <View style={{ alignItems: 'center' }}>
               <Svg width={320} height={215}>
                 {/* Axes */}

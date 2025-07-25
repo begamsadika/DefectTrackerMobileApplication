@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Image, TextInput } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 
 // Define navigation type for Home
@@ -32,6 +32,12 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   return (
     <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
       <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={styles.backButton}>
+            <Icon name="arrow-left" size={28} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Home</Text>
+        </View>
         <View style={styles.body}>
           <Text style={styles.headingSS}>DEFECT TRACKER</Text>
           <View style={styles.card}>
@@ -251,6 +257,25 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     tintColor: '#b6c2d6',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
 

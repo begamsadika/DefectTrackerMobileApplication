@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, Platform, KeyboardAvoidingView, ScrollView, ImageBackground } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
 
@@ -161,72 +161,78 @@ function Login(props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+    <ImageBackground
+      source={require('../assets/Home.jpg')}
+      style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+      imageStyle={{ opacity: 0.18 }}
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        style={{ flex: 1, width: '100%' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
       >
-        <Text style={styles.pageTitle}>DefectTracker Pro</Text>
-        <Text style={styles.pageSubtitle}>Sign in to your account</Text>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.pageTitle}>DefectTracker Pro</Text>
+          <Text style={styles.pageSubtitle}>Sign in to your account</Text>
 
-        <View style={[styles.card, { marginTop: 16 }]}> {/* Add margin above card */}
-          <Text style={styles.label}>Username</Text>
-          <View style={styles.inputRow}>
-            <Icon name="mail" size={20} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your username"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputRow}>
-            <Icon name="lock" size={20} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-
-          <View style={styles.optionsRow}>
-            <View style={styles.checkboxRow}>
-              {/* ...existing code... */}
+          <View style={[styles.card, { marginTop: 16 }]}> {/* Add margin above card */}
+            <Text style={styles.label}>Username</Text>
+            <View style={styles.inputRow}>
+              <Icon name="mail" size={20} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your username"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                placeholderTextColor="#94a3b8"
+              />
             </View>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputRow}>
+              <Icon name="lock" size={20} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholderTextColor="#94a3b8"
+              />
+            </View>
+
+            <View style={styles.optionsRow}>
+              <View style={styles.checkboxRow}>
+                {/* ...existing code... */}
+              </View>
+            </View>
+            <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 20, marginTop: -20 }}>
+              <Text style={styles.forgotText}>Forgot Your Username or Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.button} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Sign In</Text>
+            </TouchableOpacity>
+
+            {/* <TouchableOpacity
+              style={[styles.button, { backgroundColor: '#10b981', marginBottom: 8 }]}
+              onPress={() => navigation && navigation.navigate('IconTest')}
+            >
+              <Text style={styles.buttonText}>Test Icons</Text>
+            </TouchableOpacity> */}
+
+            {/* <View style={styles.demoBox}>
+              <Text style={styles.demoTitle}>Demo Credentials:</Text>
+              <Text style={styles.demoText}>Username: admin</Text>
+              <Text style={styles.demoText}>Password: admin</Text>
+            </View> */}
           </View>
-          <TouchableOpacity style={{ alignSelf: 'center', marginBottom: 20, marginTop: -20 }}>
-            <Text style={styles.forgotText}>Forgot Your Username or Password</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Sign In</Text>
-          </TouchableOpacity>
-
-          {/* <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#10b981', marginBottom: 8 }]}
-            onPress={() => navigation && navigation.navigate('IconTest')}
-          >
-            <Text style={styles.buttonText}>Test Icons</Text>
-          </TouchableOpacity> */}
-
-          {/* <View style={styles.demoBox}>
-            <Text style={styles.demoTitle}>Demo Credentials:</Text>
-            <Text style={styles.demoText}>Username: admin</Text>
-            <Text style={styles.demoText}>Password: admin</Text>
-          </View> */}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
