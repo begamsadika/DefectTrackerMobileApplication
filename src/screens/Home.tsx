@@ -42,7 +42,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
               </View>
             </View>
             {/* Login Form */}
-            <Text style={styles.title}>Log In</Text>
+            <Text style={styles.title}>Sign In</Text>
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.input}
@@ -76,7 +76,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Log In</Text>
+              <Text style={styles.buttonText}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>

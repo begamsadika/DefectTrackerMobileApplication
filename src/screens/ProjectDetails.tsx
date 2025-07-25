@@ -108,9 +108,8 @@ const ProjectDetails = () => {
 
 
   return (
-    <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
-      <View style={styles.overlay}>
-        <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollView}>
           {/* Project Selection Horizontal Scroll */}
           <View style={styles.selectorContainer}>
             <Text style={styles.selectorTitle}>Project Selection</Text>
@@ -219,23 +218,39 @@ const ProjectDetails = () => {
           <View style={styles.summaryCol}>
             {/* Defect Density Card - Increased Y Axis Size */}
             <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
-              <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#222', marginBottom: 8, textAlign: 'center', color:'rgba(24,52,90,0.85)'}}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'rgba(24,52,90,0.85)' }}>
                 Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
               <DefectDensityMeter defectDensity={4.36} />
             </View>
-            {/* Defect Severity Index */}
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Defect Severity Index</Text>
-              <View style={{ alignItems: 'center', marginTop: 12 }}>
-                <View style={styles.severityBarWrap}>
-                  <View style={styles.severityBar} />
-                </View>
-                <Text style={styles.severityValue}>135.9</Text>
-                <Text style={styles.severityDesc}>Weighted severity score (higher = more severe defects)</Text>
+        {/* Defect Severity Index - Updated to match screenshot */}
+        <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
+          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: '#1e293b', textAlign: 'center' }}>
+            Defect Severity Index
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+            <View style={{ alignItems: 'center', marginRight: 18 }}>
+              <View style={{ width: 28, height: 100, backgroundColor: '#f1f5f9', borderRadius: 14, justifyContent: 'flex-end', alignItems: 'center', overflow: 'hidden' }}>
+                <View style={{ width: 28, height: 62, backgroundColor: '#ef4444', borderRadius: 14 }} />
+              </View>
+              {/* Y axis labels */}
+              <View style={{ position: 'absolute', left: -32, top: 0, height: 100, justifyContent: 'space-between' }}>
+                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>100</Text>
+                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>75</Text>
+                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>50</Text>
+                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>25</Text>
+                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>0</Text>
               </View>
             </View>
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>62.5</Text>
+              <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', maxWidth: 180 }}>
+                Weighted severity score (higher = more severe defects)
+              </Text>
+            </View>
+          </View>
+        </View>
             {/* Defect to Remark Ratio */}
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
@@ -364,8 +379,7 @@ const ProjectDetails = () => {
             </View>
           </View>
         </ScrollView>
-      </View>
-    </ImageBackground>
+        </View>
   );
 };
 
@@ -422,19 +436,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 15,
   },
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject,
-    resizeMode: 'cover',
-  },
-  overlay: {
+  scrollView: {
     flex: 1,
-    backgroundColor: 'rgba(24,52,90,0.85)', // semi-transparent overlay
+    paddingHorizontal: 4,
+    paddingTop: 10,
   },
   container: {
     flex: 1,
-    backgroundColor: 'transparent', // important for the image to show through
-    paddingHorizontal: 4,
-    paddingTop: 10,
+    backgroundColor: '#ffffff',
   },
   summaryCol: {
     flexDirection: 'column',
