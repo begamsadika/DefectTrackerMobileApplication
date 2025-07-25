@@ -64,11 +64,17 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
-      {/* Back button at the top */}
-      <View style={{ paddingTop: 18, paddingLeft: 8, paddingBottom: 2 }}>
-        <TouchableOpacity style={styles.backIconWrap} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-left" size={28} color="#fff" />
-        </TouchableOpacity>
+      {/* Header with back arrow in blue circle and profile icon */}
+      <View style={styles.ssHeaderBg}>
+        <View style={styles.headerRowSS}>
+          <TouchableOpacity style={styles.backIconCircleSS} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-left" size={28} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headingSS}>Defect Tracker</Text>
+        </View>
+        <View style={styles.profileCircleSS}>
+          <Image source={require('../assets/user.png')} style={styles.profileImgSS} />
+        </View>
       </View>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Modal
@@ -192,7 +198,76 @@ const Dashboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'white',//'#89CFF0'//#87CEEB
+  },
+  ssHeaderBg: {
+    backgroundColor: '#061d5bff',
+    height: 120,
+    marginTop: 24,
+    marginHorizontal: 16,
+    borderRadius: 0,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  backIconCircleSS: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    // backgroundColor: '',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    marginRight: 12,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+  },
+  headerRowSS: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '100%',
+    paddingTop: 18,
+    paddingBottom: 8,
+    paddingLeft: 0,
+    paddingRight: 0,
+    zIndex: 2,
+  },
+  headingSS: {
+    color: '#fff',
+    fontSize: 34,
+    fontWeight: 'bold',
+    textAlign: 'left',
+    marginLeft: 0,
+    flex: 1,
+    letterSpacing: 0.5,
+  },
+  profileCircleSS: {
+    position: 'absolute',
+    top: 100,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 35,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#061d5bff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 8,
+    elevation: 6,
+    zIndex: 10,
+  },
+  profileImgSS: {
+    width: 30,
+    height: 30,
+    borderRadius: 24,
+    resizeMode: 'cover',
   },
   headerBg: {
     width: '100%',
@@ -251,6 +326,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
+  // ...existing code...
   headerWelcome: {
     color: '#fff',
     fontSize: 18,
@@ -299,6 +375,7 @@ const styles = StyleSheet.create({
     color: '#1e293b',
     textAlign: 'center',
     marginBottom: 4,
+    marginTop:20,
   },
   overviewSubtitle: {
     fontSize: 14,
