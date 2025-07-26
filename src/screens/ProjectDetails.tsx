@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
@@ -70,6 +70,7 @@ const ProjectDetails = () => {
   const [showPieModal, setShowPieModal] = useState(false);
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
+  const navigation = useNavigation();
   // @ts-ignore
   const { project: initialProject } = route.params || {};
   const [selectedProject, setSelectedProject] = useState(initialProject || PROJECTS[0]);
@@ -107,34 +108,54 @@ const ProjectDetails = () => {
 
 
 
+  React.useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-          {/* Project Selection Horizontal Scroll */}
-          <View style={styles.selectorContainer}>
-            <Text style={styles.selectorTitle}>Project Selection</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
-              {PROJECTS.map((proj, idx) => (
-                <TouchableOpacity
-                  key={proj.name + idx}
-                  style={[styles.chip, selectedProject.name === proj.name ? styles.chipActive : null]}
-                  onPress={() => setSelectedProject(proj)}
-                >
-                  <Text style={[styles.chipText, selectedProject.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+      {/* Blue Section with Defect Tracker and Profile */}
+      <View style={styles.blueHeaderSection}>
+        <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
+        {/* Profile image overlapping bottom left of header */}
+        <View style={styles.headerProfileOverlapWrap}>
+          <View style={styles.headerProfileCircle}>
+            <Image
+              source={require('../assets/prfile.jpg')}
+              style={styles.headerProfileImg}
+            />
           </View>
+        </View>
+      </View>
 
-          {/* Project Info Card */}
-          <View style={styles.infoCard}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={styles.projectTitle}>{selectedProject.name}</Text>
-              <View style={[styles.statusCard, { backgroundColor: riskColors[risk as 'high' | 'medium' | 'low'] + '22' }]}> 
-                <Text style={[styles.statusText, { color: riskColors[risk as 'high' | 'medium' | 'low'] }]}>{riskLabels[risk as 'high' | 'medium' | 'low']}</Text>
-              </View>
-            </View>
+      {/* Project name and status row below header */}
+      {/* Project name and status card/button below header */}
+      <View style={styles.projectStatusCardButton}>
+        <Text style={styles.projectStatusCardName}>{selectedProject.name}</Text>
+        <View style={{ alignItems: 'flex-end' }}>
+          <View style={[styles.statusPill, { backgroundColor: '#fdecec' }]}> 
+            <Text style={[styles.statusPillText, { color: riskColors[risk] }]}>{riskLabels[risk]}</Text>
           </View>
+        </View>
+      </View>
+      <ScrollView style={styles.scrollView}>
+
+      {/* Project Selection Horizontal Scroll */}
+      <View style={styles.selectorContainer}>
+        <Text style={styles.selectorTitle}>Project Selection</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+          {PROJECTS.map((proj, idx) => (
+            <TouchableOpacity
+              key={proj.name + idx}
+              style={[styles.chip, selectedProject.name === proj.name ? styles.chipActive : null]}
+              onPress={() => setSelectedProject(proj)}
+            >
+              <Text style={[styles.chipText, selectedProject.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+          
 
           {/* Defect Severity Breakdown */}
           <Text style={styles.breakdownTitle}>Defect Severity Breakdown</Text>
@@ -197,7 +218,7 @@ const ProjectDetails = () => {
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Status Breakdown for {selectedSeverity.charAt(0).toUpperCase() + selectedSeverity.slice(1)}</Text>
                 <DefectPieChart
-                  title={null}
+                  title="Status Breakdown"
                   data={DEFECTS[selectedSeverity].breakdown.map(item => ({
                     label: item.label,
                     value: item.count,
@@ -384,6 +405,23 @@ const ProjectDetails = () => {
 };
 
 const styles = StyleSheet.create({
+  statusPill: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#fdecec',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+    alignSelf: 'flex-end',
+    marginTop: 2,
+  },
+  statusPillText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#ef4444',
+    textAlign: 'center',
+  },
   viewChartButton: {
     backgroundColor: 'rgba(24,52,90,0.85)',
     borderRadius: 8,
@@ -398,6 +436,39 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  headerProfileOverlapWrap: {
+    position: 'absolute',
+    left: 18,
+    bottom: -32,
+    zIndex: 2,
+  },
+  // ...existing code...
+  projectStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 18,
+  },
+  projectStatusName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#14316e',
+    marginLeft: 82,
+    marginBottom: 2,
+  },
+  projectStatusLabel: {
+    fontSize: 14,
+    color: '#222',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  projectStatusValue: {
+    fontSize: 16,
+    color: '#ef4444',
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -417,24 +488,25 @@ const styles = StyleSheet.create({
     // paddingVertical: ,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: 'rgba(24,52,90,0.85)',
-    marginBottom: 18,
+    textAlign: 'right',
+    marginTop: 2,
+  },
+  // ...existing code...
+  ratioDesc: {
+    fontSize: 15,
+    color: '#64748b',
+    marginBottom: 8,
     textAlign: 'center',
   },
-  closeModalButton: {
-    backgroundColor: 'rgba(24,52,90,0.85)',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    marginTop: 18,
-    elevation: 2,
-  },
-  closeModalButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 15,
+  ratioBadge: {
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    alignSelf: 'center',
+    marginTop: 4,
   },
   scrollView: {
     flex: 1,
@@ -478,8 +550,6 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     alignSelf: 'flex-start',
   },
-
-
   severityBarWrap: {
     width: 18,
     height: 70,
@@ -524,19 +594,22 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     textAlign: 'center',
   },
-  ratioDesc: {
-    fontSize: 15,
-    color: '#64748b',
-    marginBottom: 8,
-    textAlign: 'center',
+  closeModalButton: {
+    backgroundColor: 'rgba(24,52,90,0.85)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginTop: 18,
+    elevation: 2,
   },
-  ratioBadge: {
-    backgroundColor: '#ef4444',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    alignSelf: 'center',
-    marginTop: 4,
+  closeModalButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 38,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 2,
+    textAlign: 'center',
   },
   ratioBadgeText: {
     color: '#fff',
@@ -644,31 +717,28 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: '#fff',
   },
-  infoCard: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 14,
-    padding: 18,
-    elevation: 2,
-    marginBottom: 16,
-  },
-  projectTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'rgba(24,52,90,0.85)',
-  },
-  statusCard: {
-    paddingHorizontal: 18,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignItems: 'center',
+  customHeader: {
+    backgroundColor: '#061d5bff',
+    height: 120,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    marginHorizontal: 0,
+    marginTop: 0,
+    marginBottom: 0,
     justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
-  statusText: {
-    fontWeight: 'bold',
-    fontSize: 18,
+  // Removed duplicate headerProfileCircle/headerProfileImg styles
+  headerProfileWrap: {
+    position: 'absolute',
+    left: 18,
+    bottom: -20,
+    zIndex: 10,
   },
+  // ...existing code...
   breakdownTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -712,6 +782,149 @@ const styles = StyleSheet.create({
   chartsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  topHeaderBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingTop: 18,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  backIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(24,52,90,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  backIcon: {
+    fontSize: 26,
+    color: '#19407a',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  topHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#222',
+    flex: 1,
+    textAlign: 'left',
+  },
+  blueHeaderSection: {
+    backgroundColor: '#061d5bff',
+    paddingTop: 18,
+    paddingBottom: 32,
+    paddingHorizontal: 0,
+    alignItems: 'center',
+    position: 'relative',
+    margin: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+  },
+  bigDefectTracker: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  projectInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    width: '90%',
+    marginTop: 0,
+  },
+  projectNameStatusCol: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  selectedProjectName: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  statusBadge: {
+    backgroundColor: '#19407a',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+    marginTop: 0,
+  },
+  statusBadgeText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  headerProfileCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#061d5bff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerProfileImg: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    resizeMode: 'cover',
+  },
+  projectStatusCardButton: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    borderWidth: 6,
+    borderColor: '#061d5bff',
+  },
+  projectStatusCardName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#14316e',
+  },
+  projectStatusCardLabel: {
+    fontSize: 14,
+    color: '#222',
+    fontWeight: '500',
+    marginBottom: 2,
+    textAlign: 'right',
+  },
+  projectStatusCardValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    marginTop: 2,
   },
 });
 

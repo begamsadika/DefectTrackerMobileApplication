@@ -67,13 +67,13 @@ const Dashboard = () => {
       {/* Header with back arrow in blue circle and profile icon */}
       <View style={styles.ssHeaderBg}>
         <View style={styles.headerRowSS}>
-          <TouchableOpacity style={styles.backIconCircleSS} onPress={() => navigation.goBack()}>
+          {/* <TouchableOpacity style={styles.backIconCircleSS} onPress={() => navigation.goBack()}>
             <Icon name="arrow-left" size={28} color="#fff" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <Text style={styles.headingSS}>Defect Tracker</Text>
         </View>
         <View style={styles.profileCircleSS}>
-          <Image source={require('../assets/user.png')} style={styles.profileImgSS} />
+          <Image source={require('../assets/prfile.jpg')} style={styles.profileImgSS} />
         </View>
       </View>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 34,
     fontWeight: 'bold',
-    textAlign: 'left',
+    textAlign: 'center',
     marginLeft: 0,
     flex: 1,
     letterSpacing: 0.5,
@@ -422,6 +422,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 2,
+    borderColor: '#061d5bff',
   },
   cardHeaderRow: {
     flexDirection: 'row',

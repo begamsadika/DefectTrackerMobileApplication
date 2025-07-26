@@ -23,10 +23,26 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [rememberMe, setRememberMe] = React.useState(false);
+  const [usernameError, setUsernameError] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState('');
 
   const handleLogin = () => {
-    // Implement login logic here
-    navigation.navigate('Dashboard');
+    let valid = true;
+    if (!username.trim()) {
+      setUsernameError('Please fill out this field.');
+      valid = false;
+    } else {
+      setUsernameError('');
+    }
+    if (!password.trim()) {
+      setPasswordError('Please fill out this field.');
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+    if (valid) {
+      navigation.navigate('Dashboard');
+    }
   };
 
   return (
@@ -50,23 +66,51 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
             {/* Login Form */}
             <Text style={styles.title}>Sign In</Text>
             <View style={styles.inputGroup}>
+              <Text style={styles.label}>Username</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Username"
+                style={[styles.input, usernameError ? styles.inputError : null]}
+                placeholder="Enter your username"
                 placeholderTextColor="#b6c2d6"
                 value={username}
-                onChangeText={setUsername}
+                onChangeText={text => {
+                  setUsername(text);
+                  if (usernameError && text.trim()) setUsernameError('');
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
               />
+              {usernameError ? (
+                <View style={styles.errorTooltipWrap}>
+                  <View style={styles.errorTooltip}>
+                    <Icon name="alert-triangle" size={18} color="#f59e42" style={{marginRight: 6}} />
+                    <Text style={styles.errorText}>{usernameError}</Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
             <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Password"
+                style={[styles.input, passwordError ? styles.inputError : null]}
+                placeholder="Enter your password"
                 placeholderTextColor="#b6c2d6"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={text => {
+                  setPassword(text);
+                  if (passwordError && text.trim()) setPasswordError('');
+                }}
                 secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
               />
+              {passwordError ? (
+                <View style={styles.errorTooltipWrap}>
+                  <View style={styles.errorTooltip}>
+                    <Icon name="alert-triangle" size={18} color="#f59e42" style={{marginRight: 6}} />
+                    <Text style={styles.errorText}>{passwordError}</Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
             <View style={styles.row}>
               <TouchableOpacity style={styles.checkboxContainer} onPress={() => setRememberMe(!rememberMe)}>
@@ -164,7 +208,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#222',
+    color: 'white',
     marginBottom: 6,
     alignSelf: 'flex-start',
   },
@@ -187,6 +231,42 @@ const styles = StyleSheet.create({
     borderColor: '#3b4a5a',
     borderRadius: 14,
     marginBottom: 2,
+  },
+  inputError: {
+    borderColor: '#f59e42',
+    shadowColor: '#f59e42',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  errorTooltipWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  errorTooltip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: '#f59e42',
+    position: 'absolute',
+    top: -38,
+    left: 16,
+    zIndex: 10,
+  },
+  errorText: {
+    color: '#222',
+    fontSize: 14,
+    fontWeight: '500',
   },
   row: {
     flexDirection: 'row',
