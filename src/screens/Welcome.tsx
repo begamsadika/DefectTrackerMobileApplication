@@ -8,10 +8,10 @@ const Welcome = () => {
     <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
       <View style={styles.overlay}>
         <View style={styles.centerContent}>
-          <Text style={styles.title}>Welcome to Defect Tracker</Text>
-          <Text style={styles.subtitle}>Track, analyze, and improve your project quality</Text>
+          <Text style={styles.title}>Defect Tracker is Ready</Text>
+          <Text style={styles.subtitle}>Let’s find and fix those bugs—together!</Text>
           <TouchableOpacity style={styles.goButton} onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.goButtonText}>Lets go</Text>
+            <Text style={styles.goButtonText}>Start Now</Text>
           </TouchableOpacity>
         </View>
       </View>

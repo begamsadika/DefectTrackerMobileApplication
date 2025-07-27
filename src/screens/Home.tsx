@@ -48,12 +48,12 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   return (
     <ImageBackground source={require('../assets/Home.jpg')} style={styles.backgroundImage}>
       <View style={styles.container}>
-        <View style={styles.header}>
+        {/* <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={styles.backButton}>
             <Icon name="arrow-left" size={28} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Home</Text>
-        </View>
+        </View> */}
         <View style={styles.body}>
           <Text style={styles.headingSS}>DEFECT TRACKER</Text>
           <View style={styles.card}>
