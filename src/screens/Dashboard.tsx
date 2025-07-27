@@ -58,25 +58,39 @@ const Dashboard = () => {
   const [modalVisible, setModalVisible] = React.useState(false);
   const navigation = useNavigation();
 
-  const filteredProjects = selectedRisk === 'all'
+  // Sort projects: high (red), then medium (yellow), then low (green)
+  const riskOrder = { high: 0, medium: 1, low: 2 };
+  const filteredProjects = (selectedRisk === 'all'
     ? PROJECTS
-    : PROJECTS.filter(p => p.risk === selectedRisk);
+    : PROJECTS.filter(p => p.risk === selectedRisk)
+  ).slice().sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
 
   return (
     <View style={styles.container}>
       {/* Header with back arrow in blue circle and profile icon */}
-      <View style={styles.ssHeaderBg}>
-        <View style={styles.headerRowSS}>
-          {/* <TouchableOpacity style={styles.backIconCircleSS} onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={28} color="#fff" />
-          </TouchableOpacity> */}
-          <Text style={styles.headingSS}>Defect Tracker</Text>
-        </View>
-        <View style={styles.profileCircleSS}>
-          <Image source={require('../assets/prfile.jpg')} style={styles.profileImgSS} />
+      <View style={styles.blueHeaderSection}>
+        <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
+        {/* Profile image overlapping bottom left of header */}
+        <View style={styles.headerProfileOverlapWrap}>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+            <View style={styles.headerProfileCircle}>
+              <Image
+                source={require('../assets/prfile.jpg')}
+                style={styles.headerProfileImg}
+              />
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      {/* Fixed Dashboard Overview Heading */}
+      <View style={[styles.fixedOverviewHeader, { marginTop: 38 }]}> {/* Increased marginTop to push down overview */}
+        <Text style={styles.overviewTitle}>Dashboard Overview</Text>
+        <Text style={styles.overviewSubtitle}>
+          Gain insights into your projects with real-time health metrics and status summaries
+        </Text>
+        <View style={styles.sectionDivider} />
+      </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 0 }}>
         <Modal
           visible={modalVisible}
           transparent
@@ -120,12 +134,6 @@ const Dashboard = () => {
             </View>
           </TouchableOpacity>
         </Modal>
-
-        <Text style={styles.overviewTitle}>Dashboard Overview</Text>
-        <Text style={styles.overviewSubtitle}>
-          Gain insights into your projects with real-time health metrics and status summaries
-        </Text>
-        <View style={styles.sectionDivider} />
 
         <Text style={[styles.sectionTitless, { marginLeft: 20 }]}>Project Status Insights</Text>
         {/* High Risk Projects Card */}
@@ -219,79 +227,98 @@ const Dashboard = () => {
 };
 
 const styles = StyleSheet.create({
+  fixedOverviewHeader: {
+    backgroundColor: '#fff',
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingHorizontal: 0,
+    zIndex: 2,
+    elevation: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: '#061d5bff',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    marginLeft: 10,
+    marginRight: 10,
+    borderWidth: 4,
+    borderColor: '#061d5bff',
+    marginBottom: 18,
+  },
   container: {
     flex: 1,
     backgroundColor: 'white',//'#89CFF0'//#87CEEB
   },
-  ssHeaderBg: {
-    backgroundColor: '#061d5bff',
-    height: 120,
-    marginTop: 24,
-    marginHorizontal: 16,
-    borderRadius: 0,
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  backIconCircleSS: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    // backgroundColor: '',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-    marginRight: 12,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
-    shadowRadius: 6,
-  },
-  headerRowSS: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: '100%',
-    paddingTop: 18,
-    paddingBottom: 8,
-    paddingLeft: 0,
-    paddingRight: 0,
-    zIndex: 2,
-  },
-  headingSS: {
-    color: '#fff',
-    fontSize: 34,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginLeft: 0,
-    flex: 1,
-    letterSpacing: 0.5,
-  },
-  profileCircleSS: {
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 35,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: '#061d5bff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.14,
-    shadowRadius: 8,
-    elevation: 6,
-    zIndex: 10,
-  },
-  profileImgSS: {
-    width: 30,
-    height: 30,
-    borderRadius: 24,
-    resizeMode: 'cover',
-  },
+  // ssHeaderBg: {
+  //   backgroundColor: '#061d5bff',
+  //   height: 120,
+  //   marginTop: 24,
+  //   marginHorizontal: 16,
+  //   borderRadius: 0,
+  //   position: 'relative',
+  //   justifyContent: 'center',
+  // },
+  // backIconCircleSS: {
+  //   width: 44,
+  //   height: 44,
+  //   borderRadius: 22,
+  //   // backgroundColor: '',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   marginLeft: 8,
+  //   marginRight: 12,
+  //   elevation: 6,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.10,
+  //   shadowRadius: 6,
+  // },
+  // headerRowSS: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'flex-start',
+  //   width: '100%',
+  //   paddingTop: 18,
+  //   paddingBottom: 8,
+  //   paddingLeft: 0,
+  //   paddingRight: 0,
+  //   zIndex: 2,
+  // },
+  // headingSS: {
+  //   color: '#fff',
+  //   fontSize: 34,
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  //   marginLeft: 0,
+  //   flex: 1,
+  //   letterSpacing: 0.5,
+  // },
+  // profileCircleSS: {
+  //   position: 'absolute',
+  //   top: 100,
+  //   left: 20,
+  //   width: 40,
+  //   height: 40,
+  //   borderRadius: 35,
+  //   backgroundColor: '#fff',
+  //   borderWidth: 2,
+  //   borderColor: '#061d5bff',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 4 },
+  //   shadowOpacity: 0.14,
+  //   shadowRadius: 8,
+  //   elevation: 6,
+  //   zIndex: 10,
+  // },
+  // profileImgSS: {
+  //   width: 30,
+  //   height: 30,
+  //   borderRadius: 24,
+  //   resizeMode: 'cover',
+  // },
   headerBg: {
     width: '100%',
     marginTop: 0,
@@ -306,6 +333,54 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
+  blueHeaderSection: {
+    backgroundColor: '#061d5bff',
+    height: 120,
+    marginTop: 24,
+    marginHorizontal: 16,
+    borderRadius: 0,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  bigDefectTracker: {
+    color: '#fff',
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+
+headerProfileCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#061d5bff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerProfileImg: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    resizeMode: 'cover',
+  },
+
+
+headerProfileOverlapWrap: {
+    position: 'absolute',
+    left: 18,
+    bottom: -24, // slightly less overlap so the icon is fully visible
+    zIndex: 2,
+  },
   heading: {
   color: '#fff',
   fontSize: 28,

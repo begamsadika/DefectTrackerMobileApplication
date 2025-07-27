@@ -118,24 +118,40 @@ const ProjectDetails = () => {
         <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
         {/* Profile image overlapping bottom left of header */}
         <View style={styles.headerProfileOverlapWrap}>
-          <View style={styles.headerProfileCircle}>
-            <Image
-              source={require('../assets/prfile.jpg')}
-              style={styles.headerProfileImg}
-            />
-          </View>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+            <View style={styles.headerProfileCircle}>
+              <Image
+                source={require('../assets/prfile.jpg')}
+                style={styles.headerProfileImg}
+              />
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Project name and status row below header */}
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
         <Text style={styles.projectStatusCardName}>{selectedProject.name}</Text>
-        <View style={{ alignItems: 'flex-end' }}>
-          <View style={[styles.statusPill, { backgroundColor: '#fdecec' }]}> 
-            <Text style={[styles.statusPillText, { color: riskColors[risk] }]}>{riskLabels[risk]}</Text>
-          </View>
-        </View>
+        <TouchableOpacity
+          style={[
+            styles.statusPill,
+            risk === 'high' && { backgroundColor: '#fdecec', borderColor: '#ef4444', borderWidth: 2 },
+            risk === 'medium' && { backgroundColor: '#fef9c3', borderColor: '#facc15', borderWidth: 2 },
+            risk === 'low' && { backgroundColor: '#dcfce7', borderColor: '#22c55e', borderWidth: 2 },
+          ]}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.statusPillText,
+              risk === 'high' && { color: '#ef4444' },
+              risk === 'medium' && { color: '#facc15' },
+              risk === 'low' && { color: '#22c55e' },
+            ]}
+          >
+            {riskLabels[risk]}
+          </Text>
+        </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollView}>
 
@@ -440,7 +456,7 @@ const styles = StyleSheet.create({
   headerProfileOverlapWrap: {
     position: 'absolute',
     left: 18,
-    bottom: -32,
+    bottom: -28,
     zIndex: 2,
   },
   // ...existing code...
@@ -818,14 +834,12 @@ const styles = StyleSheet.create({
   },
   blueHeaderSection: {
     backgroundColor: '#061d5bff',
-    paddingTop: 18,
-    paddingBottom: 32,
-    paddingHorizontal: 0,
-    alignItems: 'center',
+    height: 120,
+    marginTop: 24,
+    marginHorizontal: 16,
+    borderRadius: 0,
     position: 'relative',
-    margin: 16,
-    marginBottom: 8,
-    borderRadius: 12,
+    justifyContent: 'center',
   },
   bigDefectTracker: {
     color: '#fff',
@@ -898,7 +912,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     marginHorizontal: 24,
-    marginTop: 32,
+    marginTop: 44,
     marginBottom: 12,
     elevation: 3,
     shadowColor: '#000',
