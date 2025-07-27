@@ -83,16 +83,39 @@ const Dashboard = () => {
           animationType="fade"
           onRequestClose={() => setModalVisible(false)}
         >
-          <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-            <View style={styles.modalMenu}>
-              <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('high'); setModalVisible(false); }}>
-                <Text style={styles.filterTextRed}>High Risk</Text>
+          <TouchableOpacity style={[styles.modalOverlay, { justifyContent: 'flex-start', alignItems: 'flex-end' }]} onPress={() => setModalVisible(false)}>
+            <View style={[styles.modalMenu, { marginRight: 16, marginTop: 380 }]}> 
+              <TouchableOpacity
+                style={[styles.modalMenuItem,
+                  selectedRisk === 'all' && styles.selectedFilterButton,
+                  selectedRisk === 'all' && { borderColor: '#222', backgroundColor: '#e5e7eb' }
+                ]}
+                onPress={() => { setSelectedRisk('all'); setModalVisible(false); }}>
+                <Text style={[{ color: '#222', fontWeight: 'bold' }, selectedRisk === 'all' && { color: '#222' }]}>All Projects</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('medium'); setModalVisible(false); }}>
-                <Text style={styles.filterTextYellow}>Medium Risk</Text>
+              <TouchableOpacity
+                style={[styles.modalMenuItem,
+                  selectedRisk === 'high' && styles.selectedFilterButton,
+                  selectedRisk === 'high' && { borderColor: '#c90404', backgroundColor: '#fee2e2' }
+                ]}
+                onPress={() => { setSelectedRisk('high'); setModalVisible(false); }}>
+                <Text style={[styles.filterTextRed, selectedRisk === 'high' && { color: '#c90404', fontWeight: 'bold' }]}>High Risk</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalMenuItem} onPress={() => { setSelectedRisk('low'); setModalVisible(false); }}>
-                <Text style={styles.filterTextGreen}>Low Risk</Text>
+              <TouchableOpacity
+                style={[styles.modalMenuItem,
+                  selectedRisk === 'medium' && styles.selectedFilterButton,
+                  selectedRisk === 'medium' && { borderColor: '#d9c10d', backgroundColor: '#fef9c3' }
+                ]}
+                onPress={() => { setSelectedRisk('medium'); setModalVisible(false); }}>
+                <Text style={[styles.filterTextYellow, selectedRisk === 'medium' && { color: '#d9c10d', fontWeight: 'bold' }]}>Medium Risk</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalMenuItem,
+                  selectedRisk === 'low' && styles.selectedFilterButton,
+                  selectedRisk === 'low' && { borderColor: '#0b9c40', backgroundColor: '#dcfce7' }
+                ]}
+                onPress={() => { setSelectedRisk('low'); setModalVisible(false); }}>
+                <Text style={[styles.filterTextGreen, selectedRisk === 'low' && { color: '#0b9c40', fontWeight: 'bold' }]}>Low Risk</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -660,9 +683,23 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   modalMenuItem: {
-    paddingVertical: 10,
-    width: '100%',
+    paddingVertical: 16,
+    minWidth: 160,
     alignItems: 'center',
+    borderRadius: 28,
+    marginVertical: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedFilterButton: {
+    borderWidth: 2,
+    borderColor: '#222',
+    backgroundColor: '#e5e7eb',
+    shadowColor: '#222',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });
 
