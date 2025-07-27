@@ -18,7 +18,7 @@ export default function App() {
         <Stack.Screen name="Welcome" component={Welcome} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="Dashboard" component={Dashboard} options={{ headerShown: false }} />
-        <Stack.Screen name="Authorization" component={Authorization} options={{ title: 'Forgot Password' }} />
+        <Stack.Screen name="Authorization" component={Authorization} options={{ headerShown: false  }} />
         {/* <Stack.Screen name="IconTest" component={IconTest} options={{ title: 'Icon Test' }} /> */}
         <Stack.Screen name="ProjectDetails" component={ProjectDetails} options={{ title: 'Project Details' }} />
         <Stack.Screen name="Settings" component={Settings} options={{ title: 'Settings' }} />

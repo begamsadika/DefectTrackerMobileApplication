@@ -174,7 +174,15 @@ const ProjectDetails = () => {
           
 
           {/* Defect Severity Breakdown */}
-          <Text style={styles.breakdownTitle}>Defect Severity Breakdown</Text>
+          <Text style={{
+            fontSize: 22,
+            fontWeight: 'bold',
+            color: '#475569',
+            marginTop: 12,
+            marginLeft: 8,
+            marginBottom: 18,
+            textAlign: 'left',
+          }}>Defect Severity Breakdown</Text>
           <View style={styles.breakdownCol}>
             {/* High */}
             <View style={[styles.breakdownCard, { borderColor: riskColors.high }]}> 
@@ -263,7 +271,7 @@ const ProjectDetails = () => {
             </View>
         {/* Defect Severity Index - Updated to match screenshot */}
         <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
-          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: '#1e293b', textAlign: 'center' }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: 'rgba(24,52,90,0.85)', textAlign: 'center' }}>
             Defect Severity Index
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
