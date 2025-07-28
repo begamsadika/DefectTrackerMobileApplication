@@ -26,6 +26,18 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const [usernameError, setUsernameError] = React.useState('');
   const [passwordError, setPasswordError] = React.useState('');
 
+  // Reset username and password when Home screen is focused
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setUsername('');
+      setPassword('');
+      setUsernameError('');
+      setPasswordError('');
+      setRememberMe(false);
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const handleLogin = () => {
     let valid = true;
     if (!username.trim()) {

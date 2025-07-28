@@ -21,7 +21,7 @@ export default function App() {
         <Stack.Screen name="Authorization" component={Authorization} options={{ headerShown: false  }} />
         {/* <Stack.Screen name="IconTest" component={IconTest} options={{ title: 'Icon Test' }} /> */}
         <Stack.Screen name="ProjectDetails" component={ProjectDetails} options={{ title: 'Project Details' }} />
-        <Stack.Screen name="Settings" component={Settings} options={{ title: 'Settings' }} />
+        <Stack.Screen name="Settings" component={Settings} options={{ headerShown: false  }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

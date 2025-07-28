@@ -70,28 +70,7 @@ const Dashboard = () => {
       {/* Header with back arrow in blue circle, profile icon, and logout icon at top right */}
       <View style={[styles.blueHeaderSection, { height: 132 }]}> {/* Increased height for more Y axis space */}
         {/* Logout icon at top right corner, above and clear of heading */}
-        <TouchableOpacity
-                  style={{ position: 'absolute', top: 8, right: 16, zIndex: 10 }}
-                  onPress={() => {/* TODO: Implement logout logic */}}
-                >
-                  <View style={{
-                    width: 44,
-                    height: 44,
-                    // borderRadius: 22,
-                    // backgroundColor: '#fff',
-                    // borderWidth: 3,
-                    // borderColor: '#ef4444',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    // shadowColor: '#000',
-                    // shadowOffset: { width: 0, height: 4 },
-                    // shadowOpacity: 0.14,
-                    // shadowRadius: 8,
-                    elevation: 6,
-                  }}>
-                    <SafeIcon name="log-out" size={24} color="white" library="Feather" />
-                  </View>
-                </TouchableOpacity>
+        
         <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
         {/* Profile image overlapping bottom left of header */}
         <View style={styles.headerProfileOverlapWrap}>
@@ -108,10 +87,7 @@ const Dashboard = () => {
       {/* Fixed Dashboard Overview Heading */}
       <View style={[styles.fixedOverviewHeader, { marginTop: 38 }]}> {/* Increased marginTop to push down overview */}
         <Text style={styles.overviewTitle}>Dashboard Overview</Text>
-        <Text style={styles.overviewSubtitle}>
-          Gain insights into your projects with real-time health metrics and status summaries
-        </Text>
-        <View style={styles.sectionDivider} />
+        
       </View>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 0 }}>
         <Modal
@@ -157,6 +133,10 @@ const Dashboard = () => {
             </View>
           </TouchableOpacity>
         </Modal>
+        <Text style={styles.overviewSubtitle}>
+          Gain insights into your projects with real-time health metrics and status summaries
+        </Text>
+        {/* <View style={styles.sectionDivider} /> */}
 
         <Text style={[styles.sectionTitless, { marginLeft: 20 }]}>Project Status Insights</Text>
         {/* High Risk Projects Card */}
@@ -257,7 +237,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     zIndex: 2,
     elevation: 2,
-    borderBottomWidth: 1,
+    borderBottomWidth: 4,
     borderBottomColor: '#061d5bff',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
@@ -496,13 +476,14 @@ headerProfileOverlapWrap: {
     color: '#1e293b',
     textAlign: 'center',
     marginBottom: 4,
-    marginTop:20,
+    marginTop:4,
   },
   overviewSubtitle: {
     fontSize: 14,
-    color: '#64748b',
+    color: '#14316e',
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 20,
+    marginTop:20,
   },
   sectionDivider: {
     height: 2,
