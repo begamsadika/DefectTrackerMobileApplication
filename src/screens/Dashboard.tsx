@@ -67,8 +67,31 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with back arrow in blue circle and profile icon */}
-      <View style={styles.blueHeaderSection}>
+      {/* Header with back arrow in blue circle, profile icon, and logout icon at top right */}
+      <View style={[styles.blueHeaderSection, { height: 132 }]}> {/* Increased height for more Y axis space */}
+        {/* Logout icon at top right corner, above and clear of heading */}
+        <TouchableOpacity
+                  style={{ position: 'absolute', top: 8, right: 16, zIndex: 10 }}
+                  onPress={() => {/* TODO: Implement logout logic */}}
+                >
+                  <View style={{
+                    width: 44,
+                    height: 44,
+                    // borderRadius: 22,
+                    // backgroundColor: '#fff',
+                    // borderWidth: 3,
+                    // borderColor: '#ef4444',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    // shadowColor: '#000',
+                    // shadowOffset: { width: 0, height: 4 },
+                    // shadowOpacity: 0.14,
+                    // shadowRadius: 8,
+                    elevation: 6,
+                  }}>
+                    <SafeIcon name="log-out" size={24} color="white" library="Feather" />
+                  </View>
+                </TouchableOpacity>
         <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
         {/* Profile image overlapping bottom left of header */}
         <View style={styles.headerProfileOverlapWrap}>

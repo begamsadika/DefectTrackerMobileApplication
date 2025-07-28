@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#14316e',
     marginBottom: 20,
     textAlign: 'left',
   },

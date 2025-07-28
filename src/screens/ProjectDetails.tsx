@@ -177,7 +177,7 @@ const ProjectDetails = () => {
           <Text style={{
             fontSize: 22,
             fontWeight: 'bold',
-            color: '#475569',
+            color: '#14316e',
             marginTop: 12,
             marginLeft: 8,
             marginBottom: 18,
@@ -263,7 +263,7 @@ const ProjectDetails = () => {
           <View style={styles.summaryCol}>
             {/* Defect Density Card - Increased Y Axis Size */}
             <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
-              <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'rgba(24,52,90,0.85)' }}>
+              <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
                 Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
@@ -335,7 +335,7 @@ const ProjectDetails = () => {
           {/* Time to Find/Fix Defects Charts */}
           {/* Time to Find Defects Line Chart (Single) */}
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'rgba(24,52,90,0.85)', marginBottom: 12 }}>Time to Find Defects</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#14316e', marginBottom: 12 }}>Time to Find Defects</Text>
             <View style={{ alignItems: 'center' }}>
               <Svg width={320} height={213}>
                 {/* Axes */}
@@ -380,7 +380,7 @@ const ProjectDetails = () => {
           </View>
           {/* Time to Fix Defects Line Chart (Single) */}
           <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 18, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'rgba(24,52,90,0.85)', marginBottom: 12 }}>Time to Fix Defects</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#14316e', marginBottom: 12 }}>Time to Fix Defects</Text>
             <View style={{ alignItems: 'center' }}>
               <Svg width={320} height={215}>
                 {/* Axes */}
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   viewChartButton: {
-    backgroundColor: 'rgba(24,52,90,0.85)',
+    backgroundColor: '#14316e',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 18,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontWeight: 'bold',
     fontSize: 18,
-    color: 'rgba(24,52,90,0.85)',
+    color: '#14316e',
     marginBottom: 4,
     textAlign: 'left',
     alignSelf: 'flex-start',
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeModalButton: {
-    backgroundColor: 'rgba(24,52,90,0.85)',
+    backgroundColor: '#14316e',
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 18,
@@ -628,10 +628,10 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 38,
-    fontWeight: 'bold',
-    color: '#1e293b',
+    // fontWeight: 'bold',
+    fontSize: 20,
+    // fontWeight: 'bold',
+    color: 'white',
     marginBottom: 2,
     textAlign: 'center',
   },
@@ -714,7 +714,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: 'rgba(24,52,90,0.85)',
+    color: '#14316e',
   },
   selectorScroll: {
     flexDirection: 'row',
