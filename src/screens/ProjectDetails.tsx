@@ -4,7 +4,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
-import { getProjects } from '../api/projectget';
+import { getAllProjects } from '../api/projectget';
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -65,6 +65,7 @@ const ProjectDetails = () => {
   const navigation = useNavigation();
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [risk, setRisk] = useState<'high' | 'medium' | 'low'>('low');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // @ts-ignore
@@ -72,27 +73,37 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     setLoading(true);
-    getProjects()
+    getAllProjects()
       .then((data) => {
-        setProjects(data);
+        // Ensure data is an array
+        const projectsArray = Array.isArray(data) ? data : [];
+        setProjects(projectsArray);
         // If initialProject is provided, select it; otherwise, select the first project
         if (initialProject) {
           setSelectedProject(initialProject);
-        } else if (data.length > 0) {
-          setSelectedProject(data[0]);
+        } else if (projectsArray.length > 0) {
+          setSelectedProject(projectsArray[0]);
         }
         setError(null);
       })
       .catch((err) => {
+        console.error('Error loading projects:', err);
         setError('Failed to load projects');
         setProjects([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  // If project.risk is not present, default to 'low'
-  const risk = selectedProject?.risk || 'low';
-  const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
+  // Update risk whenever selectedProject changes
+  useEffect(() => {
+    if (selectedProject?.risk === 'high' || selectedProject?.risk === 'medium' || selectedProject?.risk === 'low') {
+      setRisk(selectedProject.risk);
+    } else {
+      setRisk('low');
+    }
+  }, [selectedProject]);
+
+  const defects = DEFECTS[risk];
 
   // Pie chart data for "Defects Reopened Multiple Times"
   const reopenedDefectsData = [
@@ -147,7 +158,9 @@ const ProjectDetails = () => {
 
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
-        <Text style={styles.projectStatusCardName}>{selectedProject?.name}</Text>
+        <Text style={styles.projectStatusCardName}>
+          {selectedProject?.projectName || 'No Project Selected'}
+        </Text>
         <TouchableOpacity
           style={[
             styles.statusPill,
@@ -178,15 +191,19 @@ const ProjectDetails = () => {
           <Text>Loading projects...</Text>
         ) : error ? (
           <Text style={{ color: 'red' }}>{error}</Text>
+        ) : projects.length === 0 ? (
+          <Text style={{ color: '#64748b', fontStyle: 'italic' }}>No projects available</Text>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
             {projects.map((proj, idx) => (
               <TouchableOpacity
-                key={proj.name + idx}
-                style={[styles.chip, selectedProject?.name === proj.name ? styles.chipActive : null]}
-                onPress={() => setSelectedProject(proj)}
+                key={proj.id ? proj.id.toString() : idx.toString()}
+                style={[styles.chip, selectedProject?.id === proj.id ? styles.chipActive : null]}
+                onPress={() => {
+                  setSelectedProject(proj);
+                }}
               >
-                <Text style={[styles.chipText, selectedProject?.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
+                <Text style={[styles.chipText, selectedProject?.id === proj.id ? styles.chipTextActive : null]}>{proj.projectName ? proj.projectName : 'No Name'}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -650,10 +667,7 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     color: '#fff',
-    // fontWeight: 'bold',
     fontSize: 20,
-    // fontWeight: 'bold',
-    color: 'white',
     marginBottom: 2,
     textAlign: 'center',
   },
