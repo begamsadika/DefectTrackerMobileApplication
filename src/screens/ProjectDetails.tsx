@@ -1,20 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
+import { getProjects } from '../api/projectget';
 
-const PROJECTS = [
-  { name: 'Defect Tracker', risk: 'high' },
-  { name: 'QA testing', risk: 'high' },
-  { name: 'project 1', risk: 'low' },
-  { name: 'Heart', risk: 'low' },
-  { name: 'Dashbord testing', risk: 'low' },
-  { name: 'JALI', risk: 'low' },
-  { name: 'Hello world', risk: 'low' },
-  { name: 'dashborad test', risk: 'high' },
-];
+// Remove static PROJECTS. We'll fetch from API.
 
 const DEFECTS = {
   high: {
@@ -71,12 +63,36 @@ const ProjectDetails = () => {
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
   const navigation = useNavigation();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   // @ts-ignore
   const { project: initialProject } = route.params || {};
-  const [selectedProject, setSelectedProject] = useState(initialProject || PROJECTS[0]);
 
-  const risk = selectedProject.risk as 'high' | 'medium' | 'low';
-  const defects = DEFECTS[risk];
+  useEffect(() => {
+    setLoading(true);
+    getProjects()
+      .then((data) => {
+        setProjects(data);
+        // If initialProject is provided, select it; otherwise, select the first project
+        if (initialProject) {
+          setSelectedProject(initialProject);
+        } else if (data.length > 0) {
+          setSelectedProject(data[0]);
+        }
+        setError(null);
+      })
+      .catch((err) => {
+        setError('Failed to load projects');
+        setProjects([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // If project.risk is not present, default to 'low'
+  const risk = selectedProject?.risk || 'low';
+  const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
 
   // Pie chart data for "Defects Reopened Multiple Times"
   const reopenedDefectsData = [
@@ -131,7 +147,7 @@ const ProjectDetails = () => {
 
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
-        <Text style={styles.projectStatusCardName}>{selectedProject.name}</Text>
+        <Text style={styles.projectStatusCardName}>{selectedProject?.name}</Text>
         <TouchableOpacity
           style={[
             styles.statusPill,
@@ -158,17 +174,23 @@ const ProjectDetails = () => {
       {/* Project Selection Horizontal Scroll */}
       <View style={styles.selectorContainer}>
         <Text style={styles.selectorTitle}>Project Selection</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
-          {PROJECTS.map((proj, idx) => (
-            <TouchableOpacity
-              key={proj.name + idx}
-              style={[styles.chip, selectedProject.name === proj.name ? styles.chipActive : null]}
-              onPress={() => setSelectedProject(proj)}
-            >
-              <Text style={[styles.chipText, selectedProject.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        {loading ? (
+          <Text>Loading projects...</Text>
+        ) : error ? (
+          <Text style={{ color: 'red' }}>{error}</Text>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+            {projects.map((proj, idx) => (
+              <TouchableOpacity
+                key={proj.name + idx}
+                style={[styles.chip, selectedProject?.name === proj.name ? styles.chipActive : null]}
+                onPress={() => setSelectedProject(proj)}
+              >
+                <Text style={[styles.chipText, selectedProject?.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
           
@@ -845,7 +867,7 @@ const styles = StyleSheet.create({
     height: 120,
     marginTop: 24,
     marginHorizontal: 16,
-    borderRadius: 0,
+    borderRadius: 10,
     position: 'relative',
     justifyContent: 'center',
   },
@@ -895,7 +917,7 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     backgroundColor: '#fff',
     borderWidth: 3,
-    borderColor: '#061d5bff',
+    borderColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -906,8 +928,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   headerProfileImg: {
-    width: 46,
-    height: 46,
+    width: 50,
+    height: 50,
     borderRadius: 23,
     resizeMode: 'cover',
   },
