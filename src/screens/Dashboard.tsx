@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackground, Image, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { getAllProjects } from '../api/projectget';
+import { getProjectCardColor } from '../api/colourcode';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 
 // Icon component with fallback
@@ -35,16 +38,7 @@ const SafeIcon: React.FC<SafeIconProps> = ({
   }
 };
 
-const PROJECTS = [
-  { name: 'Defect Tracker', risk: 'high' },
-  { name: 'QA testing', risk: 'high' },
-  { name: 'project 1', risk: 'low' },
-  { name: 'Heart', risk: 'low' },
-  { name: 'Dashbord testing', risk: 'low' },
-  { name: 'JALI', risk: 'low' },
-  { name: 'Hello world', risk: 'low' },
-  { name: 'dashborad test', risk: 'high' },
-];
+// Projects will be fetched from API
 
 // Risk color mapping from part 2
 const riskColors = {
@@ -53,17 +47,67 @@ const riskColors = {
   low: '#0b9c40',
 };
 
-const Dashboard = () => {
-  const [selectedRisk, setSelectedRisk] = React.useState('all');
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const navigation = useNavigation();
+// Define navigation types for type safety
+type RootStackParamList = {
+  Dashboard: undefined;
+  ProjectDetails: { project: any };
+  Settings: undefined;
+};
 
-  // Sort projects: high (red), then medium (yellow), then low (green)
-  const riskOrder = { high: 0, medium: 1, low: 2 };
-  const filteredProjects = (selectedRisk === 'all'
-    ? PROJECTS
-    : PROJECTS.filter(p => p.risk === selectedRisk)
-  ).slice().sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
+type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
+
+const Dashboard = () => {
+  const [selectedRisk, setSelectedRisk] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [projects, setProjects] = useState<Array<{ id: number; name?: string; projectName?: string; risk?: 'high' | 'medium' | 'low' }>>([]);
+  // Store both color and risk label for each project
+  const [projectCardInfo, setProjectCardInfo] = useState<{ [id: string]: { color: string; riskLabel: string } }>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation<DashboardScreenNavigationProp>();
+
+  // Fetch projects from API
+  useEffect(() => {
+    setLoading(true);
+    getAllProjects()
+      .then(async (data) => {
+        const arr = Array.isArray(data) ? data : [];
+        setProjects(arr);
+        setError(null);
+        // Fetch color and risk label for each project
+        const cardInfoMap: { [id: string]: { color: string; riskLabel: string } } = {};
+        await Promise.all(arr.map(async (proj: any) => {
+          if (proj.id) {
+            try {
+              const colorRes = await getProjectCardColor(proj.id);
+              // colorRes: { data: { projectCardColor: string, availableRiskLevels: string[] } }
+              if (colorRes && colorRes.data) {
+                cardInfoMap[proj.id] = {
+                  color: colorRes.data.projectCardColor || '',
+                  riskLabel: Array.isArray(colorRes.data.availableRiskLevels) && colorRes.data.availableRiskLevels.length > 0 ? colorRes.data.availableRiskLevels[0] : '',
+                };
+              }
+            } catch (e) {}
+          }
+        }));
+        setProjectCardInfo(cardInfoMap);
+      })
+      .catch(() => {
+        setError('Failed to load projects');
+        setProjects([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Filter projects by selected risk, using the same logic as Project Status Insights
+  const filteredProjects = projects.filter((p) => {
+    const riskLabel = (projectCardInfo[p.id]?.riskLabel || '').toLowerCase();
+    if (selectedRisk === 'all') return true;
+    if (selectedRisk === 'high') return (p.risk === 'high') || riskLabel.includes('high');
+    if (selectedRisk === 'medium') return (p.risk === 'medium') || riskLabel.includes('medium');
+    if (selectedRisk === 'low') return (p.risk === 'low') || (!riskLabel.includes('high') && !riskLabel.includes('medium'));
+    return true;
+  });
 
   return (
     <View style={styles.container}>
@@ -138,6 +182,7 @@ const Dashboard = () => {
         </Text>
         {/* <View style={styles.sectionDivider} /> */}
 
+
         <Text style={[styles.sectionTitless, { marginLeft: 20 }]}>Project Status Insights</Text>
         {/* High Risk Projects Card */}
         <View style={styles.cardsRow}>
@@ -147,20 +192,20 @@ const Dashboard = () => {
                 <SafeIcon name="alert-circle" size={26} color="#fff" fallbackText="⚠" />
               </View>
               <Text style={styles.cardTitle}>High Risk Projects</Text>
-              <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{PROJECTS.filter(p => p.risk === 'high').length}</Text>
+              <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{filteredProjects.filter((p) => (p.risk === 'high') || ((projectCardInfo[p.id]?.riskLabel || '').toLowerCase().includes('high'))).length}</Text>
             </View>
             <Text style={[styles.cardStatusRed, { color: riskColors.high }]}>Immediate attention required</Text>
           </View>
         </View>
         {/* Medium Risk Projects Card */}
         <View style={styles.cardsRow}>
-          <View style={[styles.card, styles.cardYellow]}>
+          <View style={[styles.card, { borderColor: riskColors.medium, backgroundColor: '#fff' }]}> {/* Force yellow border */}
             <View style={styles.cardHeaderRow}>
               <View style={[styles.cardIconCircleYellow, { backgroundColor: riskColors.medium }]}> 
                 <SafeIcon name="clock" size={24} color="#fff" fallbackText="⏰" />
               </View>
               <Text style={styles.cardTitle}>Medium Risk Projects</Text>
-              <Text style={[styles.cardCountYellow, { color: riskColors.medium }]}>{PROJECTS.filter(p => p.risk === 'medium').length}</Text>
+              <Text style={[styles.cardCountYellow, { color: riskColors.medium }]}>{filteredProjects.filter((p) => (p.risk === 'medium') || ((projectCardInfo[p.id]?.riskLabel || '').toLowerCase().includes('medium'))).length}</Text>
             </View>
             <Text style={[styles.cardStatusYellow, { color: riskColors.medium }]}>Monitor progress closely</Text>
           </View>
@@ -173,7 +218,7 @@ const Dashboard = () => {
                 <SafeIcon name="check-circle" size={24} color="#fff" fallbackText="✓" />
               </View>
               <Text style={styles.cardTitle}>Low Risk Projects</Text>
-              <Text style={[styles.cardCountGreen, { color: riskColors.low }]}>{PROJECTS.filter(p => p.risk === 'low').length}</Text>
+              <Text style={[styles.cardCountGreen, { color: riskColors.low }]}>{filteredProjects.filter((p) => (p.risk === 'low') || (!((projectCardInfo[p.id]?.riskLabel || '').toLowerCase().includes('high')) && !((projectCardInfo[p.id]?.riskLabel || '').toLowerCase().includes('medium')))).length}</Text>
             </View>
             <Text style={[styles.cardStatusGreen, { color: riskColors.low }]}>Stable and on track</Text>
           </View>
@@ -190,35 +235,34 @@ const Dashboard = () => {
           </View>
           <View style={styles.circleGrid}>
             {filteredProjects.map((project, idx) => {
-              let cardStyle, labelStyle, labelText;
-              if (project.risk === 'high') {
-                cardStyle = [styles.circleRed, { backgroundColor: riskColors.high, borderColor: riskColors.high }];
-                labelStyle = styles.circleLabelRed;
-                labelText = 'High Risk';
-              } else if (project.risk === 'medium') {
-                cardStyle = [styles.circleYellow, { backgroundColor: riskColors.medium, borderColor: riskColors.medium }];
+              // Use backend color and risk label if available
+              const cardInfo = projectCardInfo[project.id] || {};
+              let cardBg = cardInfo.color || riskColors.low;
+              let riskLabel = cardInfo.riskLabel || 'Low Risk';
+              let labelStyle = styles.circleLabelGreen;
+              // If project is medium risk, force yellow color and label
+              if ((project.risk === 'medium') || riskLabel.toLowerCase().includes('medium')) {
+                cardBg = riskColors.medium;
                 labelStyle = styles.circleLabelYellow;
-                labelText = 'Medium Risk';
-              } else {
-                cardStyle = [styles.circleGreen, { backgroundColor: riskColors.low, borderColor: riskColors.low }];
-                labelStyle = styles.circleLabelGreen;
-                labelText = 'Low Risk';
+                riskLabel = 'Medium Risk';
+              } else if ((project.risk === 'high') || riskLabel.toLowerCase().includes('high')) {
+                labelStyle = styles.circleLabelRed;
               }
               return (
                 <TouchableOpacity
-                  key={idx}
-                  style={[styles.circleCard, cardStyle]}
+                  key={project.id ? project.id.toString() : idx.toString()}
+                  style={[styles.circleCard, { backgroundColor: cardBg, borderColor: cardBg }]}
                   activeOpacity={0.8}
                   onPress={() => navigation.navigate('ProjectDetails', { project })}
                 >
                   <SafeIcon
-                    name={project.risk === 'high' ? 'alert-circle' : project.risk === 'medium' ? 'clock' : 'check-circle'}
+                    name={riskLabel.toLowerCase().includes('high') ? 'alert-circle' : riskLabel.toLowerCase().includes('medium') ? 'clock' : 'check-circle'}
                     size={40}
                     color="#fff"
-                    fallbackText={project.risk === 'high' ? '⚠' : project.risk === 'medium' ? '⏰' : '✓'}
+                    fallbackText={riskLabel.toLowerCase().includes('high') ? '⚠' : riskLabel.toLowerCase().includes('medium') ? '⏰' : '✓'}
                   />
-                  <Text style={styles.circleTitle}>{project.name}</Text>
-                  <View style={labelStyle}><Text style={styles.circleLabelText}>{labelText}</Text></View>
+                  <Text style={styles.circleTitle}>{project.name || project.projectName || 'No Name'}</Text>
+                  <View style={labelStyle}><Text style={styles.circleLabelText}>{riskLabel}</Text></View>
                 </TouchableOpacity>
               );
             })}

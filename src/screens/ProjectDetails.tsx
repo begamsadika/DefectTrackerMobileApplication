@@ -59,15 +59,12 @@ const DEFECTS = {
   },
 };
 
-const riskLabels = {
-  high: 'High Risk',
-  medium: 'Medium Risk',
-  low: 'Low Risk',
-};
+
+// Use the same risk color mapping as Dashboard
 const riskColors = {
-  high: '#ef4444',
-  medium: '#facc15',
-  low: '#22c55e',
+  high: '#c90404',
+  medium: '#d9c10d',
+  low: '#0b9c40',
 };
 
 
@@ -76,11 +73,14 @@ const ProjectDetails = () => {
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
   const navigation = useNavigation<any>();
+
   // API-driven project list
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Store backend color and risk label for the selected project
+  const [projectCardInfo, setProjectCardInfo] = useState<{ color: string; riskLabel: string }>({ color: '', riskLabel: '' });
 
   // Defect to remark ratio state
   const [defectRatio, setDefectRatio] = useState<DefectRemarkRatioData | null>(null);
@@ -137,6 +137,7 @@ const ProjectDetails = () => {
   // @ts-ignore
   const { project: initialProject } = route.params || {};
 
+
   useEffect(() => {
     setLoading(true);
     getAllProjects()
@@ -156,6 +157,30 @@ const ProjectDetails = () => {
       })
       .finally(() => setLoading(false));
   }, [initialProject]);
+
+  // Fetch backend color and risk label for selected project (like Dashboard)
+  useEffect(() => {
+    async function fetchCardInfo() {
+      if (selectedProject?.id) {
+        try {
+          const colorRes = await require('../api/colourcode').getProjectCardColor(selectedProject.id);
+          if (colorRes && colorRes.data) {
+            setProjectCardInfo({
+              color: colorRes.data.projectCardColor || '',
+              riskLabel: Array.isArray(colorRes.data.availableRiskLevels) && colorRes.data.availableRiskLevels.length > 0 ? colorRes.data.availableRiskLevels[0] : '',
+            });
+          } else {
+            setProjectCardInfo({ color: '', riskLabel: '' });
+          }
+        } catch {
+          setProjectCardInfo({ color: '', riskLabel: '' });
+        }
+      } else {
+        setProjectCardInfo({ color: '', riskLabel: '' });
+      }
+    }
+    fetchCardInfo();
+  }, [selectedProject]);
 
   useEffect(() => {
     if (initialProject) {
@@ -207,8 +232,23 @@ const ProjectDetails = () => {
     }
   }, [selectedProject]);
 
-  // If project.risk is not present, default to 'low'
-  const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
+
+  // Compute risk and label using backend-driven logic (like Dashboard)
+  let risk: 'high' | 'medium' | 'low' = 'low';
+  let riskLabel = 'Low Risk';
+  let cardBg = projectCardInfo.color || riskColors.low;
+  let labelStyle = { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginTop: 10 };
+  if ((selectedProject?.risk === 'medium') || (projectCardInfo.riskLabel || '').toLowerCase().includes('medium')) {
+    risk = 'medium';
+    cardBg = riskColors.medium;
+    labelStyle = { ...labelStyle, backgroundColor: 'rgba(255,255,255,0.15)' };
+    riskLabel = 'Medium Risk';
+  } else if ((selectedProject?.risk === 'high') || (projectCardInfo.riskLabel || '').toLowerCase().includes('high')) {
+    risk = 'high';
+    cardBg = projectCardInfo.color || riskColors.high;
+    labelStyle = { ...labelStyle, backgroundColor: 'rgba(255,255,255,0.15)' };
+    riskLabel = 'High Risk';
+  }
   const defects = DEFECTS[risk];
 
   // Pie chart data for "Defects Reopened Multiple Times"
@@ -265,26 +305,21 @@ const ProjectDetails = () => {
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
         <Text style={styles.projectStatusCardName}>{selectedProject?.name || selectedProject?.projectName || ''}</Text>
-        <TouchableOpacity
+        <View
           style={[
             styles.statusPill,
-            risk === 'high' && { backgroundColor: '#fdecec', borderColor: '#ef4444', borderWidth: 2 },
-            risk === 'medium' && { backgroundColor: '#fef9c3', borderColor: '#facc15', borderWidth: 2 },
-            risk === 'low' && { backgroundColor: '#dcfce7', borderColor: '#22c55e', borderWidth: 2 },
+            { backgroundColor: risk === 'high' ? '#fdecec' : risk === 'medium' ? '#fef9c3' : '#dcfce7', borderColor: risk === 'high' ? riskColors.high : risk === 'medium' ? riskColors.medium : riskColors.low, borderWidth: 2 },
           ]}
-          activeOpacity={0.7}
         >
           <Text
             style={[
               styles.statusPillText,
-              risk === 'high' && { color: '#ef4444' },
-              risk === 'medium' && { color: '#facc15' },
-              risk === 'low' && { color: '#22c55e' },
+              { color: risk === 'high' ? riskColors.high : risk === 'medium' ? riskColors.medium : riskColors.low },
             ]}
           >
-            {riskLabels[risk]}
+            {riskLabel}
           </Text>
-        </TouchableOpacity>
+        </View>
       </View>
       <ScrollView style={styles.scrollView}>
 
