@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { getAllProjects } from '../api/projectget';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
-import { getProjects } from '../api/projectget';
+
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -58,41 +59,47 @@ const riskColors = {
   low: '#22c55e',
 };
 
+
 const ProjectDetails = () => {
   const [showPieModal, setShowPieModal] = useState(false);
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
+  // API-driven project list
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // @ts-ignore
-  const { project: initialProject } = route.params || {};
-
   useEffect(() => {
     setLoading(true);
-    getProjects()
+    getAllProjects()
       .then((data) => {
-        setProjects(data);
-        // If initialProject is provided, select it; otherwise, select the first project
+        const arr = Array.isArray(data) ? data : [];
+        setProjects(arr);
         if (initialProject) {
           setSelectedProject(initialProject);
-        } else if (data.length > 0) {
-          setSelectedProject(data[0]);
+        } else if (arr.length > 0) {
+          setSelectedProject(arr[0]);
         }
         setError(null);
       })
-      .catch((err) => {
+      .catch(() => {
         setError('Failed to load projects');
         setProjects([]);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialProject]);
+  // @ts-ignore
+  const { project: initialProject } = route.params || {};
+  useEffect(() => {
+    if (initialProject) {
+      setSelectedProject(initialProject);
+    }
+  }, [initialProject]);
 
   // If project.risk is not present, default to 'low'
-  const risk = selectedProject?.risk || 'low';
-  const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
+  const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
+  const defects = DEFECTS[risk];
 
   // Pie chart data for "Defects Reopened Multiple Times"
   const reopenedDefectsData = [
@@ -178,15 +185,17 @@ const ProjectDetails = () => {
           <Text>Loading projects...</Text>
         ) : error ? (
           <Text style={{ color: 'red' }}>{error}</Text>
+        ) : projects.length === 0 ? (
+          <Text style={{ color: '#64748b', fontStyle: 'italic' }}>No projects available</Text>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
             {projects.map((proj, idx) => (
               <TouchableOpacity
-                key={proj.name + idx}
-                style={[styles.chip, selectedProject?.name === proj.name ? styles.chipActive : null]}
+                key={proj.id ? proj.id.toString() : idx.toString()}
+                style={[styles.chip, selectedProject?.id === proj.id ? styles.chipActive : null]}
                 onPress={() => setSelectedProject(proj)}
               >
-                <Text style={[styles.chipText, selectedProject?.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
+                <Text style={[styles.chipText, selectedProject?.id === proj.id ? styles.chipTextActive : null]}>{proj.name || proj.projectName || 'No Name'}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -650,10 +659,7 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     color: '#fff',
-    // fontWeight: 'bold',
     fontSize: 20,
-    // fontWeight: 'bold',
-    color: 'white',
     marginBottom: 2,
     textAlign: 'center',
   },
