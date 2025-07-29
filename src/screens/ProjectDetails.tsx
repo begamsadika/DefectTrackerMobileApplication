@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { getAllProjects } from '../api/projectget';
+import { getDefectRemarkRatio } from '../api/defecttoratio';
+import { getDefectDensity } from '../api/defectdensity';
+import { getSeverityDSI } from '../api/sevirity';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
+// Backend response: { remarks, defects, ratio, category, color }
+type DefectRemarkRatioData = {
+  remarks: number;
+  defects: number;
+  ratio: string;
+  category: string;
+  color: string;
+};
 
 
 // Remove static PROJECTS. We'll fetch from API.
@@ -70,6 +81,62 @@ const ProjectDetails = () => {
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Defect to remark ratio state
+  const [defectRatio, setDefectRatio] = useState<DefectRemarkRatioData | null>(null);
+  const [ratioLoading, setRatioLoading] = useState(false);
+
+  // Defect Density state
+  const [defectDensity, setDefectDensity] = useState<number | null>(null);
+  const [defectDensityLoading, setDefectDensityLoading] = useState(false);
+  // Fetch defect density when selected project changes
+  useEffect(() => {
+    if (selectedProject?.id) {
+      setDefectDensityLoading(true);
+      getDefectDensity(selectedProject.id)
+        .then((data) => {
+          // API returns { data: { defectDensity: number, ... }, ... }
+          let densityValue = null;
+          if (data && typeof data === 'object' && 'data' in data && typeof data.data === 'object' && 'defectDensity' in data.data) {
+            densityValue = typeof data.data.defectDensity === 'number' ? data.data.defectDensity : Number(data.data.defectDensity);
+          }
+          setDefectDensity(typeof densityValue === 'number' && !isNaN(densityValue) ? densityValue : null);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch defect density:', error);
+          setDefectDensity(null);
+        })
+        .finally(() => setDefectDensityLoading(false));
+    }
+  }, [selectedProject]);
+
+  // Defect Severity Index state
+  const [dsi, setDSI] = useState<number | null>(null);
+  const [dsiLoading, setDSILoading] = useState(false);
+  // Fetch DSI when selected project changes
+  useEffect(() => {
+    if (selectedProject?.id) {
+      setDSILoading(true);
+      getSeverityDSI(selectedProject.id)
+        .then((data) => {
+          // API returns { data: { dsiPercentage: number, ... }, ... }
+          let dsiValue = null;
+          if (data && typeof data === 'object' && 'data' in data && typeof data.data === 'object' && 'dsiPercentage' in data.data) {
+            dsiValue = typeof data.data.dsiPercentage === 'number' ? data.data.dsiPercentage : Number(data.data.dsiPercentage);
+          }
+          setDSI(typeof dsiValue === 'number' && !isNaN(dsiValue) ? dsiValue : null);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch DSI:', error);
+          setDSI(null);
+        })
+        .finally(() => setDSILoading(false));
+    }
+  }, [selectedProject]);
+
+  // @ts-ignore
+  const { project: initialProject } = route.params || {};
+
   useEffect(() => {
     setLoading(true);
     getAllProjects()
@@ -89,13 +156,56 @@ const ProjectDetails = () => {
       })
       .finally(() => setLoading(false));
   }, [initialProject]);
-  // @ts-ignore
-  const { project: initialProject } = route.params || {};
+
   useEffect(() => {
     if (initialProject) {
       setSelectedProject(initialProject);
     }
   }, [initialProject]);
+
+  // Fetch defect to remark ratio when selected project changes
+  useEffect(() => {
+    if (selectedProject?.id) {
+      setRatioLoading(true);
+      getDefectRemarkRatio(selectedProject.id)
+        .then((response) => {
+          console.log('Defect to Remark Ratio API response:', response);
+          let ratioData: DefectRemarkRatioData | null = null;
+          if (response && typeof response === 'object') {
+            // Map backend fields to UI fields
+            const level = (response as any).level;
+            const colorMap: Record<string, string> = {
+              Low: '#22c55e',
+              Medium: '#facc15',
+              High: '#ef4444',
+            };
+            let ratioValue = '0.00%';
+            if (typeof (response as any).ratio === 'string') {
+              ratioValue = (response as any).ratio;
+            } else if (typeof (response as any).ratio === 'number') {
+              // If backend gives a number like 98.01, treat as percent; if 0.9801, multiply by 100
+              const num = (response as any).ratio;
+              ratioValue = (num > 1 ? num : num * 100).toFixed(2) + '%';
+            }
+            ratioData = {
+              remarks: typeof (response as any).remarkCount === 'number' ? (response as any).remarkCount : 0,
+              defects: typeof (response as any).defectCount === 'number' ? (response as any).defectCount : 0,
+              ratio: ratioValue,
+              category: typeof level === 'string' ? level : 'Unknown',
+              color: colorMap[level] || '#22c55e',
+            };
+          }
+          setDefectRatio(ratioData);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch defect ratio:', error);
+          setDefectRatio(null);
+        })
+        .finally(() => {
+          setRatioLoading(false);
+        });
+    }
+  }, [selectedProject]);
 
   // If project.risk is not present, default to 'low'
   const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
@@ -154,7 +264,7 @@ const ProjectDetails = () => {
 
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
-        <Text style={styles.projectStatusCardName}>{selectedProject?.name}</Text>
+        <Text style={styles.projectStatusCardName}>{selectedProject?.name || selectedProject?.projectName || ''}</Text>
         <TouchableOpacity
           style={[
             styles.statusPill,
@@ -295,12 +405,14 @@ const ProjectDetails = () => {
             {/* Defect Density Card - Increased Y Axis Size */}
             <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
               <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
-                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
+                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>
+                  {defectDensityLoading ? 'Loading...' : defectDensity !== null ? defectDensity : 'No Data'}
+                </Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
-              <DefectDensityMeter defectDensity={4.36} />
+              <DefectDensityMeter defectDensity={defectDensity !== null ? defectDensity : 0} />
             </View>
-        {/* Defect Severity Index - Updated to match screenshot */}
+        {/* Defect Severity Index - Integrated with backend */}
         <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
           <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: 'rgba(24,52,90,0.85)', textAlign: 'center' }}>
             Defect Severity Index
@@ -308,7 +420,17 @@ const ProjectDetails = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
             <View style={{ alignItems: 'center', marginRight: 18 }}>
               <View style={{ width: 28, height: 100, backgroundColor: '#f1f5f9', borderRadius: 14, justifyContent: 'flex-end', alignItems: 'center', overflow: 'hidden' }}>
-                <View style={{ width: 28, height: 62, backgroundColor: '#ef4444', borderRadius: 14 }} />
+                {/* Bar height proportional to DSI (max 100) */}
+                <View style={{
+                  width: 28,
+                  height: dsi !== null && !dsiLoading ? Math.max(0, Math.min(100, dsi)) : 0,
+                  backgroundColor: '#ef4444',
+                  borderRadius: 14,
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                }} />
               </View>
               {/* Y axis labels */}
               <View style={{ position: 'absolute', left: -32, top: 0, height: 100, justifyContent: 'space-between' }}>
@@ -320,7 +442,13 @@ const ProjectDetails = () => {
               </View>
             </View>
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>62.5</Text>
+              {dsiLoading ? (
+                <Text style={{ fontSize: 24, color: '#64748b', textAlign: 'center', marginBottom: 2 }}>Loading...</Text>
+              ) : dsi !== null ? (
+                <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>{dsi}</Text>
+              ) : (
+                <Text style={{ fontSize: 24, color: '#64748b', textAlign: 'center', marginBottom: 2 }}>No Data</Text>
+              )}
               <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', maxWidth: 180 }}>
                 Weighted severity score (higher = more severe defects)
               </Text>
@@ -330,10 +458,42 @@ const ProjectDetails = () => {
             {/* Defect to Remark Ratio */}
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
-              <View style={styles.ratioBox}>
-                <Text style={styles.ratioValue}>44.44%</Text>
-                <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
-                <View style={styles.ratioBadge}><Text style={styles.ratioBadgeText}>High</Text></View>
+              <View
+                style={[
+                  styles.ratioBox,
+                  defectRatio?.category === 'Low' && { backgroundColor: '#dcfce7' }, // green
+                  defectRatio?.category === 'Medium' && { backgroundColor: '#fef9c3' }, // yellow
+                  defectRatio?.category === 'High' && { backgroundColor: '#fdecec' }, // red
+                ]}
+              >
+                {ratioLoading ? (
+                  <Text style={[styles.ratioValue, { fontSize: 16 }]}>Loading...</Text>
+                ) : defectRatio ? (
+                  <>
+                    <Text style={styles.ratioValue}>
+                      {defectRatio.ratio || '0.00%'}
+                    </Text>
+                    <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
+                    <View style={{
+                      backgroundColor:
+                        defectRatio.category === 'Low' ? '#22c55e' :
+                        defectRatio.category === 'Medium' ? '#facc15' :
+                        defectRatio.category === 'High' ? '#ef4444' : '#64748b',
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      paddingVertical: 4,
+                      alignSelf: 'center',
+                      marginTop: 4,
+                    }}>
+                      <Text style={styles.ratioBadgeText}>{defectRatio.category || 'Unknown'}</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={[styles.ratioValue, { fontSize: 16 }]}>No Data</Text>
+                    <Text style={styles.ratioDesc}>Unable to load ratio data</Text>
+                  </>
+                )}
               </View>
             </View>
           </View>
