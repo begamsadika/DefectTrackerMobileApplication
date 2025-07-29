@@ -1,3 +1,5 @@
+// ...existing code...
+import { getSeverityIndex } from '../api/sevirityindex';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -5,6 +7,7 @@ import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { getAllProjects } from '../api/projectget';
+import { getDefectRemarkRatio } from '../api/defecttoratio';
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -59,6 +62,12 @@ const riskColors = {
 };
 
 const ProjectDetails = () => {
+  const [severityIndex, setSeverityIndex] = useState<number | null>(null);
+  const [severityIndexLoading, setSeverityIndexLoading] = useState(false);
+  const [severityIndexError, setSeverityIndexError] = useState<string | null>(null);
+  const [defectRemarkRatio, setDefectRemarkRatio] = useState<number | null>(null);
+  const [defectRemarkLevel, setDefectRemarkLevel] = useState<string>('');
+  const [defectRemarkLoading, setDefectRemarkLoading] = useState(false);
   const [showPieModal, setShowPieModal] = useState(false);
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
@@ -100,6 +109,47 @@ const ProjectDetails = () => {
       setRisk(selectedProject.risk);
     } else {
       setRisk('low');
+    }
+    // Fetch defect to remark ratio when selectedProject changes
+    if (selectedProject && selectedProject.id) {
+      setDefectRemarkLoading(true);
+      getDefectRemarkRatio(selectedProject.id)
+        .then((data) => {
+          // Assume API returns an array with at least one object containing 'ratio' and 'level' fields
+          if (Array.isArray(data) && data.length > 0) {
+            setDefectRemarkRatio(data[0].ratio ?? null);
+            setDefectRemarkLevel(data[0].level ?? '');
+          } else {
+            setDefectRemarkRatio(null);
+            setDefectRemarkLevel('');
+          }
+        })
+        .catch((err) => {
+          setDefectRemarkRatio(null);
+          setDefectRemarkLevel('');
+        })
+        .finally(() => setDefectRemarkLoading(false));
+      // Fetch severity index
+      setSeverityIndexLoading(true);
+      setSeverityIndexError(null);
+      getSeverityIndex(selectedProject.id)
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0 && typeof data[0].dsi !== 'undefined') {
+            setSeverityIndex(data[0].dsi);
+          } else {
+            setSeverityIndex(null);
+          }
+        })
+        .catch((err) => {
+          setSeverityIndex(null);
+          setSeverityIndexError('Failed to load severity index');
+        })
+        .finally(() => setSeverityIndexLoading(false));
+    } else {
+      setDefectRemarkRatio(null);
+      setDefectRemarkLevel('');
+      setSeverityIndex(null);
+      setSeverityIndexError(null);
     }
   }, [selectedProject]);
 
@@ -309,39 +359,56 @@ const ProjectDetails = () => {
               <DefectDensityMeter defectDensity={4.36} />
             </View>
         {/* Defect Severity Index - Updated to match screenshot */}
-        <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
-          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: 'rgba(24,52,90,0.85)', textAlign: 'center' }}>
-            Defect Severity Index
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
-            <View style={{ alignItems: 'center', marginRight: 18 }}>
-              <View style={{ width: 28, height: 100, backgroundColor: '#f1f5f9', borderRadius: 14, justifyContent: 'flex-end', alignItems: 'center', overflow: 'hidden' }}>
-                <View style={{ width: 28, height: 62, backgroundColor: '#ef4444', borderRadius: 14 }} />
-              </View>
-              {/* Y axis labels */}
-              <View style={{ position: 'absolute', left: -32, top: 0, height: 100, justifyContent: 'space-between' }}>
-                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>100</Text>
-                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>75</Text>
-                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>50</Text>
-                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>25</Text>
-                <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>0</Text>
-              </View>
-            </View>
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>62.5</Text>
-              <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', maxWidth: 180 }}>
-                Weighted severity score (higher = more severe defects)
+            <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
+              <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: 'rgba(24,52,90,0.85)', textAlign: 'center' }}>
+                Defect Severity Index
               </Text>
+              {severityIndexLoading ? (
+                <Text style={{ fontSize: 24, color: '#64748b', textAlign: 'center' }}>Loading...</Text>
+              ) : severityIndexError ? (
+                <Text style={{ fontSize: 16, color: 'red', textAlign: 'center' }}>{severityIndexError}</Text>
+              ) : severityIndex !== null ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
+                  <View style={{ alignItems: 'center', marginRight: 18 }}>
+                    <View style={{ width: 28, height: 100, backgroundColor: '#f1f5f9', borderRadius: 14, justifyContent: 'flex-end', alignItems: 'center', overflow: 'hidden' }}>
+                      {/* Bar height proportional to severityIndex (max 100) */}
+                      <View style={{ width: 28, height: Math.max(0, Math.min(100, severityIndex)), backgroundColor: '#ef4444', borderRadius: 14, position: 'absolute', bottom: 0 }} />
+                    </View>
+                    {/* Y axis labels */}
+                    <View style={{ position: 'absolute', left: -32, top: 0, height: 100, justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>100</Text>
+                      <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>75</Text>
+                      <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>50</Text>
+                      <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>25</Text>
+                      <Text style={{ fontSize: 13, color: '#64748b', textAlign: 'right' }}>0</Text>
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>{severityIndex}</Text>
+                    <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', maxWidth: 180 }}>
+                      Weighted severity score (higher = more severe defects)
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <Text style={{ fontSize: 16, color: '#64748b', textAlign: 'center' }}>No data available</Text>
+              )}
             </View>
-          </View>
-        </View>
             {/* Defect to Remark Ratio */}
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
               <View style={styles.ratioBox}>
-                <Text style={styles.ratioValue}>44.44%</Text>
-                <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
-                <View style={styles.ratioBadge}><Text style={styles.ratioBadgeText}>High</Text></View>
+                {defectRemarkLoading ? (
+                  <Text style={styles.ratioValue}>Loading...</Text>
+                ) : defectRemarkRatio !== null ? (
+                  <>
+                    <Text style={styles.ratioValue}>{defectRemarkRatio}%</Text>
+                    <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
+                    <View style={styles.ratioBadge}><Text style={styles.ratioBadgeText}>{defectRemarkLevel || 'N/A'}</Text></View>
+                  </>
+                ) : (
+                  <Text style={styles.ratioDesc}>No data available</Text>
+                )}
               </View>
             </View>
           </View>
