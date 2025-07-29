@@ -8,16 +8,16 @@ interface DefectDensityMeterProps {
 }
 
 const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
-  defectDensity = 8.00
+  defectDensity = 5.00
 }) => {
   const [inputValue, setInputValue] = useState(defectDensity.toString());
   const currentValue = parseFloat(inputValue) || defectDensity;
 
-  // Determine status text and color based on value (Green: 1-7, Yellow: 7-10, Red: 10-12)
+  // Determine status text and color based on value (Green: 0-7, Yellow: 7-10, Red: 10+)
   const getStatusInfo = (value: number) => {
-    if (value < 7) return { text: 'Good', color: '#22c55e' };
-    if (value < 10) return { text: 'Average', color: '#facc15' };
-    return { text: 'Poor', color: '#ef4444' };
+    if (value <= 7) return { text: 'Good', color: '#22c55e' };
+    if (value <= 10) return { text: 'Moderate Quality', color: '#facc15' };
+    return { text: 'High Risk', color: '#ef4444' };
   };
 
   const statusInfo = getStatusInfo(currentValue);
@@ -40,10 +40,10 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
       {/* React Native Speedometer */}
       <View style={styles.speedometerContainer}>
         <RNSpeedometer
-          value={Math.max(1, Math.min(currentValue, 12))}
+          value={Math.max(0, Math.min(currentValue, 15))}
           size={200}
-          minValue={1}
-          maxValue={12}
+          minValue={0}
+          maxValue={15}
           allowedDecimals={2}
           labels={[
             {
@@ -52,12 +52,12 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
               activeBarColor: '#22c55e',
             },
             {
-              name: 'Average',
+              name: 'Moderate Quality',
               labelColor: '#facc15',
               activeBarColor: '#facc15',
             },
             {
-              name: 'Poor',
+              name: 'High Risk',
               labelColor: '#ef4444',
               activeBarColor: '#ef4444',
             },
