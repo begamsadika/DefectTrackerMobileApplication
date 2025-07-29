@@ -247,6 +247,11 @@ const Dashboard = () => {
                 riskLabel = 'Medium Risk';
               } else if ((project.risk === 'high') || riskLabel.toLowerCase().includes('high')) {
                 labelStyle = styles.circleLabelRed;
+              } else if ((project.risk === 'low' || (!riskLabel.toLowerCase().includes('high') && !riskLabel.toLowerCase().includes('medium')))) {
+                // For low risk, use solid green background and label
+                cardBg = riskColors.low;
+                riskLabel = 'Low';
+                labelStyle = styles.circleLabelGreen;
               }
               return (
                 <TouchableOpacity
