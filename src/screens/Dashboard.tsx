@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BackHandler, Alert } from 'react-native';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackground, Image, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
@@ -57,6 +58,23 @@ type RootStackParamList = {
 type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
 
 const Dashboard = () => {
+  // Handle Android hardware back button
+  useEffect(() => {
+    const onBackPress = () => {
+      Alert.alert(
+        'Exit App',
+        'Do you want to exit the app?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Exit', style: 'destructive', onPress: () => BackHandler.exitApp() },
+        ],
+        { cancelable: true }
+      );
+      return true; // Prevent default back action
+    };
+    BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+  }, []);
   const [selectedRisk, setSelectedRisk] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [modalVisible, setModalVisible] = useState(false);
   const [projects, setProjects] = useState<Array<{ id: number; name?: string; projectName?: string; risk?: 'high' | 'medium' | 'low' }>>([]);
