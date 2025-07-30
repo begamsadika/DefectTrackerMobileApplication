@@ -153,7 +153,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#14316e',
     marginBottom: 20,
-    textAlign: 'left',
+    textAlign: 'center',
+    marginTop:10,
   },
   chartContainer: {
     alignItems: 'center',

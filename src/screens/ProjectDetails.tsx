@@ -507,7 +507,7 @@ const ProjectDetails = () => {
           {/* Summary Cards Row BELOW Defect Severity Breakdown */}
           <View style={styles.summaryCol}>
             {/* Defect Density Card - Increased Y Axis Size */}
-            <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
+            <View style={[styles.summaryCard, { paddingTop: 10, paddingBottom: 40, minHeight: 220 }]}> 
               <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
                 Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>
                   {defectDensityLoading ? 'Loading...' : defectDensity !== null ? defectDensity : 'No Data'}
@@ -517,7 +517,7 @@ const ProjectDetails = () => {
               <DefectDensityMeter defectDensity={defectDensity !== null ? defectDensity : 0} />
             </View>
         {/* Defect Severity Index - Integrated with backend */}
-        <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
+        <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 18, paddingBottom: 32 }]}> 
           <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 8, color: 'rgba(24,52,90,0.85)', textAlign: 'center' }}>
             Defect Severity Index
           </Text>
