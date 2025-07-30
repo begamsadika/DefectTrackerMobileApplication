@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BackHandler } from 'react-native';
 import { getAllProjects } from '../api/projectget';
 import { getDefectRemarkRatio } from '../api/defecttoratio';
 import { getDefectDensity } from '../api/defectdensity';
@@ -283,6 +284,16 @@ const ProjectDetails = () => {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
+
+    // Handle Android back button: go to Dashboard, not exit
+    const onBackPress = () => {
+      navigation.navigate('Dashboard');
+      return true; // prevent default
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => {
+      backHandler.remove();
+    };
   }, [navigation]);
   return (
     <View style={styles.container}>
