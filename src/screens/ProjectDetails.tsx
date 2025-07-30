@@ -6,6 +6,7 @@ import { getDefectDensity } from '../api/defectdensity';
 import { getSeverityDSI } from '../api/sevirity';
 import { getDefectSeveritySummary } from '../api/severitybreakdown';
 import { getDefectType } from '../api/defecttype';
+import { getDefectsByModule } from '../api/defectsbymodule';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
@@ -349,19 +350,44 @@ const ProjectDetails = () => {
     }
   }, [selectedProject]);
 
-  // Pie chart data for "Defects by Module"
-  const defectsByModuleData = [
-    { label: 'Configurations', value: 77, color: '#3b82f6', percentage: 16.78 },
-    { label: 'Project Management', value: 53, color: '#22c55e', percentage: 11.55 },
-    { label: 'Bench', value: 58, color: '#facc15', percentage: 12.64 },
-    { label: 'Defects', value: 67, color: '#ef4444', percentage: 14.60 },
-    { label: 'Test Cases', value: 58, color: '#a78bfa', percentage: 12.64 },
-    { label: 'Employee', value: 67, color: '#06b6d4', percentage: 14.60 },
-    { label: 'Releases', value: 34, color: '#f97316', percentage: 7.41 },
-    { label: 'Project', value: 22, color: '#f43f5e', percentage: 4.79 },
-    { label: 'Main Template', value: 4, color: '#84cc16', percentage: 0.87 },
-    { label: 'Dashboard', value: 19, color: '#f87171', percentage: 4.14 },
-  ];
+  // Defects by Module (backend-driven)
+  const [defectsByModuleData, setDefectsByModuleData] = useState<any[]>([]);
+  const [defectsByModuleLoading, setDefectsByModuleLoading] = useState(false);
+  const [defectsByModuleTotal, setDefectsByModuleTotal] = useState(0);
+
+  useEffect(() => {
+    if (selectedProject?.id) {
+      setDefectsByModuleLoading(true);
+      getDefectsByModule(selectedProject.id)
+        .then((data) => {
+          // Backend returns array directly: [{ name, value, percentage }, ...]
+          if (Array.isArray(data) && data.length > 0) {
+            const total = data.reduce((sum, item) => sum + (item.value || 0), 0);
+            setDefectsByModuleTotal(total);
+            const colorPalette = ['#3b82f6', '#22c55e', '#facc15', '#ef4444', '#a78bfa', '#06b6d4', '#f97316', '#f43f5e', '#84cc16', '#f87171'];
+            setDefectsByModuleData(
+              data.map((item: any, idx: number) => ({
+                label: item.name || item.moduleName || item.label || 'Unknown',
+                value: item.value || 0,
+                percentage: typeof item.percentage === 'number' ? item.percentage : (total > 0 ? ((item.value || 0) / total) * 100 : 0),
+                color: colorPalette[idx % colorPalette.length],
+              }))
+            );
+          } else {
+            setDefectsByModuleData([]);
+            setDefectsByModuleTotal(0);
+          }
+        })
+        .catch(() => {
+          setDefectsByModuleData([]);
+          setDefectsByModuleTotal(0);
+        })
+        .finally(() => setDefectsByModuleLoading(false));
+    } else {
+      setDefectsByModuleData([]);
+      setDefectsByModuleTotal(0);
+    }
+  }, [selectedProject]);
 
 
 
@@ -666,7 +692,7 @@ const ProjectDetails = () => {
               title="Defects by Module"
               data={defectsByModuleData}
               totalLabel="TOTAL DEFECTS"
-              totalValue={370}
+              totalValue={defectsByModuleTotal}
             />
           </View>
 
