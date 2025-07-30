@@ -5,6 +5,7 @@ import { getDefectRemarkRatio } from '../api/defecttoratio';
 import { getDefectDensity } from '../api/defectdensity';
 import { getSeverityDSI } from '../api/sevirity';
 import { getDefectSeveritySummary } from '../api/severitybreakdown';
+import { getDefectType } from '../api/defecttype';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
@@ -298,13 +299,55 @@ const ProjectDetails = () => {
     { label: '4 times', value: 37, color: '#fbbf24', percentage: 16.8 },
   ];
 
-  // Pie chart data for "Defect Distribution by Type"
-  const defectTypeData = [
-    { label: 'Functionality', value: 245, color: '#3b82f6', percentage: 53.4 },
-    { label: 'UI-UX', value: 31, color: '#10b981', percentage: 7.0 },
-    { label: 'Usability', value: 80, color: '#f59e0b', percentage: 17.6 },
-    { label: 'Validation', value: 103, color: '#ef4444', percentage: 22.4 },
-  ];
+  // Defect Distribution by Type (backend-driven, object response)
+  const [defectTypeData, setDefectTypeData] = useState<any[]>([]);
+  const [defectTypeLoading, setDefectTypeLoading] = useState(false);
+  const [defectTypeTotal, setDefectTypeTotal] = useState(0);
+  const [defectTypeMostCommon, setDefectTypeMostCommon] = useState('');
+  const [defectTypeMostCommonValue, setDefectTypeMostCommonValue] = useState(0);
+
+  useEffect(() => {
+    if (selectedProject?.id) {
+      setDefectTypeLoading(true);
+      getDefectType(selectedProject.id)
+        .then((data) => {
+          // Expecting data: { defectTypes: [], totalDefectCount, mostCommonDefectType, mostCommonDefectCount }
+          if (data && Array.isArray(data.defectTypes)) {
+            const total = typeof data.totalDefectCount === 'number' ? data.totalDefectCount : 0;
+            setDefectTypeTotal(total);
+            setDefectTypeMostCommon(data.mostCommonDefectType || '');
+            setDefectTypeMostCommonValue(data.mostCommonDefectCount || 0);
+            // Map backend fields to chart fields: label, value, percentage, color
+            const colorPalette = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#a78bfa', '#f97316', '#84cc16', '#f87171'];
+            setDefectTypeData(
+              data.defectTypes.map((item: any, idx: number) => ({
+                label: item.defectType || item.label || item.type || 'Unknown',
+                value: item.defectCount || item.count || item.value || 0,
+                percentage: typeof item.percentage === 'number' ? item.percentage : (total > 0 ? ((item.defectCount || item.count || item.value || 0) / total) * 100 : 0),
+                color: colorPalette[idx % colorPalette.length],
+              }))
+            );
+          } else {
+            setDefectTypeData([]);
+            setDefectTypeTotal(0);
+            setDefectTypeMostCommon('');
+            setDefectTypeMostCommonValue(0);
+          }
+        })
+        .catch(() => {
+          setDefectTypeData([]);
+          setDefectTypeTotal(0);
+          setDefectTypeMostCommon('');
+          setDefectTypeMostCommonValue(0);
+        })
+        .finally(() => setDefectTypeLoading(false));
+    } else {
+      setDefectTypeData([]);
+      setDefectTypeTotal(0);
+      setDefectTypeMostCommon('');
+      setDefectTypeMostCommonValue(0);
+    }
+  }, [selectedProject]);
 
   // Pie chart data for "Defects by Module"
   const defectsByModuleData = [
@@ -615,9 +658,9 @@ const ProjectDetails = () => {
               title="Defect Distribution by Type"
               data={defectTypeData}
               totalLabel="TOTAL DEFECTS"
-              totalValue={459}
-              mostCommonLabel="Most Common Functionality"
-              mostCommonValue={245}
+              totalValue={defectTypeTotal}
+              mostCommonLabel={defectTypeMostCommon ? `Most Common ${defectTypeMostCommon}` : ''}
+              mostCommonValue={defectTypeMostCommonValue}
             />
             <DefectPieChart
               title="Defects by Module"
