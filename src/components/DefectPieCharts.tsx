@@ -138,10 +138,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     paddingVertical: 8, // reduce vertical padding
-    paddingHorizontal: 16, // keep horizontal padding reasonable
+    paddingHorizontal: 10, // keep horizontal padding reasonable
     marginVertical: 4, // reduce vertical margin
     marginHorizontal: 0, // Remove horizontal margin to match ratio card width
     flex: 1,
+    minWidth: 260,
+    maxWidth: 340,
+    minHeight: 440,
+    maxHeight: 700,
+    alignSelf: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

@@ -896,10 +896,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 24,
-    minWidth: 100,
+    minWidth: 320,
+    maxWidth: 420,
     alignItems: 'center',
     elevation: 8,
-    maxHeight: 640,
+    maxHeight: 800, // increased to allow more vertical space for chart and legend
     // paddingVertical: ,
   },
   modalTitle: {
