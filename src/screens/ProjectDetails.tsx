@@ -4,7 +4,8 @@ import { getAllProjects } from '../api/projectget';
 import { getDefectRemarkRatio } from '../api/defecttoratio';
 import { getDefectDensity } from '../api/defectdensity';
 import { getSeverityDSI } from '../api/sevirity';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
+import { getDefectSeveritySummary } from '../api/severitybreakdown';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
@@ -19,46 +20,39 @@ type DefectRemarkRatioData = {
 };
 
 
-// Remove static PROJECTS. We'll fetch from API.
 
-const DEFECTS = {
-  high: {
-    total: 112,
-    breakdown: [
-      { label: 'REOPEN', color: '#ef4444', count: 3 },
-      { label: 'NEW', color: '#3b82f6', count: 50 },
-      { label: 'OPEN', color: '#22c55e', count: 5 },
-      { label: 'FIXED', color: '#a3e635', count: 14 },
-      { label: 'CLOSED', color: '#15803d', count: 37 },
-      { label: 'REJECTED', color: '#7e22ce', count: 0 },
-      { label: 'DUPLICATE', color: '#f59e42', count: 3 },
-    ],
-  },
-  medium: {
-    total: 236,
-    breakdown: [
-      { label: 'REOPEN', color: '#ef4444', count: 5 },
-      { label: 'NEW', color: '#3b82f6', count: 125 },
-      { label: 'OPEN', color: '#22c55e', count: 10 },
-      { label: 'FIXED', color: '#a3e635', count: 33 },
-      { label: 'CLOSED', color: '#15803d', count: 60 },
-      { label: 'REJECTED', color: '#7e22ce', count: 2 },
-      { label: 'DUPLICATE', color: '#f59e42', count: 1 },
-    ],
-  },
-  low: {
-    total: 97,
-    breakdown: [
-      { label: 'REOPEN', color: '#ef4444', count: 1 },
-      { label: 'NEW', color: '#3b82f6', count: 58 },
-      { label: 'OPEN', color: '#22c55e', count: 0 },
-      { label: 'FIXED', color: '#a3e635', count: 10 },
-      { label: 'CLOSED', color: '#15803d', count: 24 },
-      { label: 'REJECTED', color: '#7e22ce', count: 1 },
-      { label: 'DUPLICATE', color: '#f59e42', count: 3 },
-    ],
-  },
+
+const initialBreakdown = {
+  high: { total: 0, breakdown: [] as any[] },
+  medium: { total: 0, breakdown: [] as any[] },
+  low: { total: 0, breakdown: [] as any[] },
 };
+
+// Helper function to get color for defect status
+const getStatusColor = (status: string): string => {
+  const statusLower = status.toLowerCase();
+  switch (statusLower) {
+    case 'open':
+    case 'new':
+      return '#ef4444'; // Red
+    case 'in progress':
+    case 'assigned':
+      return '#f59e0b'; // Orange
+    case 'resolved':
+    case 'fixed':
+      return '#3b82f6'; // Blue
+    case 'closed':
+    case 'verified':
+      return '#10b981'; // Green
+    case 'reopened':
+      return '#8b5cf6'; // Purple
+    default:
+      return '#6b7280'; // Gray
+  }
+};
+
+
+
 
 
 // Use the same risk color mapping as Dashboard
@@ -68,40 +62,12 @@ const riskColors = {
   low: '#0b9c40',
 };
 
-// Function to convert Tailwind CSS classes to React Native colors
-const convertTailwindToColor = (tailwindClass: string): string => {
-  if (!tailwindClass || typeof tailwindClass !== 'string') {
-    return '';
-  }
 
-  // Handle gradient classes - extract the primary color
-  if (tailwindClass.includes('from-red-600') || tailwindClass.includes('to-red-800')) {
-    return '#dc2626'; // red-600
-  }
-  if (tailwindClass.includes('from-yellow-400') || tailwindClass.includes('to-yellow-600')) {
-    return '#facc15'; // yellow-400
-  }
-  if (tailwindClass.includes('from-green-500') || tailwindClass.includes('to-green-700')) {
-    return '#22c55e'; // green-500
-  }
-
-  // Handle solid color classes
-  if (tailwindClass.includes('bg-red-')) {
-    return '#dc2626';
-  }
-  if (tailwindClass.includes('bg-yellow-')) {
-    return '#facc15';
-  }
-  if (tailwindClass.includes('bg-green-')) {
-    return '#22c55e';
-  }
-
-  // Return empty string if no match found
-  return '';
-};
 
 
 const ProjectDetails = () => {
+  const [defectSeverityBreakdown, setDefectSeverityBreakdown] = useState(initialBreakdown);
+  const [severityLoading, setSeverityLoading] = useState(false);
   const [showPieModal, setShowPieModal] = useState(false);
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
@@ -164,6 +130,54 @@ const ProjectDetails = () => {
           setDSI(null);
         })
         .finally(() => setDSILoading(false));
+    }
+  }, [selectedProject]);
+
+  // Fetch Defect Severity Breakdown when selected project changes
+  useEffect(() => {
+    if (selectedProject?.id) {
+      setSeverityLoading(true);
+      getDefectSeveritySummary(selectedProject.id)
+        .then((data) => {
+          console.log('Severity breakdown data received:', data);
+          if (Array.isArray(data) && data.length > 0) {
+            // Transform API data to match the expected structure (statuses is an object)
+            const transformedData = {
+              high: { total: 0, breakdown: [] as any[] },
+              medium: { total: 0, breakdown: [] as any[] },
+              low: { total: 0, breakdown: [] as any[] },
+            };
+
+            data.forEach((item: any) => {
+              const severity = item.severity?.toLowerCase();
+              if (severity && (severity === 'high' || severity === 'medium' || severity === 'low')) {
+                transformedData[severity as keyof typeof transformedData].total = item.total || 0;
+                // statuses is an object: { STATUS: { color, count }, ... }
+                if (item.statuses && typeof item.statuses === 'object') {
+                  transformedData[severity as keyof typeof transformedData].breakdown = Object.entries(item.statuses).map(([status, val]: [string, any]) => ({
+                    label: status,
+                    count: val.count || 0,
+                    color: val.color || getStatusColor(status),
+                  }));
+                } else {
+                  transformedData[severity as keyof typeof transformedData].breakdown = [];
+                }
+              }
+            });
+
+            setDefectSeverityBreakdown(transformedData);
+          } else {
+            console.warn('No severity breakdown data available');
+            setDefectSeverityBreakdown(initialBreakdown);
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to fetch severity breakdown:', error);
+          setDefectSeverityBreakdown(initialBreakdown);
+        })
+        .finally(() => setSeverityLoading(false));
+    } else {
+      setDefectSeverityBreakdown(initialBreakdown);
     }
   }, [selectedProject]);
 
@@ -269,28 +283,14 @@ const ProjectDetails = () => {
   // Compute risk and label using backend-driven logic (like Dashboard)
   let risk: 'high' | 'medium' | 'low' = 'low';
   let riskLabel = 'Low Risk';
-  // Convert Tailwind CSS class to React Native color
-  const backendColor = convertTailwindToColor(projectCardInfo.color || '');
-  let cardBg = backendColor || riskColors.low;
-  let labelStyle = { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginTop: 10 };
+  // Note: Project card styling can be enhanced with backend colors if needed
   if ((selectedProject?.risk === 'medium') || (projectCardInfo.riskLabel || '').toLowerCase().includes('medium')) {
     risk = 'medium';
-    // Only override color if backend didn't provide one
-    if (!backendColor) {
-      cardBg = riskColors.medium;
-    }
-    labelStyle = { ...labelStyle, backgroundColor: 'rgba(255,255,255,0.15)' };
     riskLabel = 'Medium Risk';
   } else if ((selectedProject?.risk === 'high') || (projectCardInfo.riskLabel || '').toLowerCase().includes('high')) {
     risk = 'high';
-    // Only override color if backend didn't provide one
-    if (!backendColor) {
-      cardBg = riskColors.high;
-    }
-    labelStyle = { ...labelStyle, backgroundColor: 'rgba(255,255,255,0.15)' };
     riskLabel = 'High Risk';
   }
-  const defects = DEFECTS[risk];
 
   // Pie chart data for "Defects Reopened Multiple Times"
   const reopenedDefectsData = [
@@ -410,17 +410,26 @@ const ProjectDetails = () => {
             marginBottom: 18,
             textAlign: 'left',
           }}>Defect Severity Breakdown</Text>
+          {severityLoading ? (
+            <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={{ color: '#64748b', fontStyle: 'italic' }}>Loading severity breakdown...</Text>
+            </View>
+          ) : (
           <View style={styles.breakdownCol}>
             {/* High */}
-            <View style={[styles.breakdownCard, { borderColor: riskColors.high }]}> 
+            <View style={[styles.breakdownCard, { borderColor: riskColors.high }]}>
               <View style={styles.breakdownCardHeader}>
                 <Text style={[styles.breakdownCardTitle, { color: riskColors.high }]}>Defects on High</Text>
-                <Text style={styles.breakdownTotal}>Total: {DEFECTS.high.total}</Text>
+                <Text style={styles.breakdownTotal}>Total: {defectSeverityBreakdown.high.total}</Text>
               </View>
               <View style={styles.breakdownList}>
-                {DEFECTS.high.breakdown.map((item, i) => (
-                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-                ))}
+                {defectSeverityBreakdown.high.breakdown.length > 0 ? (
+                  defectSeverityBreakdown.high.breakdown.map((item: any, i: number) => (
+                    <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                  ))
+                ) : (
+                  <Text style={{ color: '#64748b', fontStyle: 'italic' }}>No data available</Text>
+                )}
               </View>
               <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('high'); setShowPieModal(true); }}>
                 <Text style={styles.viewChartButtonText}>View Chart</Text>
@@ -430,12 +439,16 @@ const ProjectDetails = () => {
             <View style={[styles.breakdownCard, { borderColor: riskColors.medium }]}> 
               <View style={styles.breakdownCardHeader}>
                 <Text style={[styles.breakdownCardTitle, { color: riskColors.medium }]}>Defects on Medium</Text>
-                <Text style={styles.breakdownTotal}>Total: {DEFECTS.medium.total}</Text>
+                <Text style={styles.breakdownTotal}>Total: {defectSeverityBreakdown.medium.total}</Text>
               </View>
               <View style={styles.breakdownList}>
-                {DEFECTS.medium.breakdown.map((item, i) => (
-                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-                ))}
+                {defectSeverityBreakdown.medium.breakdown.length > 0 ? (
+                  defectSeverityBreakdown.medium.breakdown.map((item: any, i: number) => (
+                    <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                  ))
+                ) : (
+                  <Text style={{ color: '#64748b', fontStyle: 'italic' }}>No data available</Text>
+                )}
               </View>
               <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('medium'); setShowPieModal(true); }}>
                 <Text style={styles.viewChartButtonText}>View Chart</Text>
@@ -445,18 +458,23 @@ const ProjectDetails = () => {
             <View style={[styles.breakdownCard, { borderColor: riskColors.low }]}> 
               <View style={styles.breakdownCardHeader}>
                 <Text style={[styles.breakdownCardTitle, { color: riskColors.low }]}>Defects on Low</Text>
-                <Text style={styles.breakdownTotal}>Total: {DEFECTS.low.total}</Text>
+                <Text style={styles.breakdownTotal}>Total: {defectSeverityBreakdown.low.total}</Text>
               </View>
               <View style={styles.breakdownList}>
-                {DEFECTS.low.breakdown.map((item, i) => (
-                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-                ))}
+                {defectSeverityBreakdown.low.breakdown.length > 0 ? (
+                  defectSeverityBreakdown.low.breakdown.map((item: any, i: number) => (
+                    <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                  ))
+                ) : (
+                  <Text style={{ color: '#64748b', fontStyle: 'italic' }}>No data available</Text>
+                )}
               </View>
               <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('low'); setShowPieModal(true); }}>
                 <Text style={styles.viewChartButtonText}>View Chart</Text>
               </TouchableOpacity>
             </View>
           </View>
+          )}
 
           {/* Modal for Pie Chart */}
           <Modal
@@ -470,14 +488,14 @@ const ProjectDetails = () => {
                 <Text style={styles.modalTitle}>Status Breakdown for {selectedSeverity.charAt(0).toUpperCase() + selectedSeverity.slice(1)}</Text>
                 <DefectPieChart
                   title="Status Breakdown"
-                  data={DEFECTS[selectedSeverity].breakdown.map(item => ({
+                  data={defectSeverityBreakdown[selectedSeverity].breakdown.map((item: any) => ({
                     label: item.label,
                     value: item.count,
                     color: item.color,
-                    percentage: DEFECTS[selectedSeverity].total > 0 ? (item.count / DEFECTS[selectedSeverity].total) * 100 : 0
+                    percentage: defectSeverityBreakdown[selectedSeverity].total > 0 ? (item.count / defectSeverityBreakdown[selectedSeverity].total) * 100 : 0
                   }))}
                   totalLabel="TOTAL DEFECTS"
-                  totalValue={DEFECTS[selectedSeverity].total}
+                  totalValue={defectSeverityBreakdown[selectedSeverity].total}
                 />
                 <TouchableOpacity style={styles.closeModalButton} onPress={() => setShowPieModal(false)}>
                   <Text style={styles.closeModalButtonText}>Close</Text>
@@ -701,7 +719,7 @@ const ProjectDetails = () => {
             </View>
           </View>
         </ScrollView>
-        </View>
+    </View>
   );
 };
 
