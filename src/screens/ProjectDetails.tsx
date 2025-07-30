@@ -603,7 +603,7 @@ const ProjectDetails = () => {
             <View style={[styles.summaryCard, { paddingTop: 10, paddingBottom: 40, minHeight: 220 }]}> 
               <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
                 Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>
-                  {defectDensityLoading ? 'Loading...' : defectDensity !== null ? defectDensity : 'No Data'}
+                  {defectDensityLoading ? 'Loading...' : defectDensity !== null ? defectDensity.toFixed(2) : 'No Data'}
                 </Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
