@@ -48,6 +48,38 @@ const riskColors = {
   low: '#0b9c40',
 };
 
+// Function to convert Tailwind CSS classes to React Native colors
+const convertTailwindToColor = (tailwindClass: string): string => {
+  if (!tailwindClass || typeof tailwindClass !== 'string') {
+    return '';
+  }
+
+  // Handle gradient classes - extract the primary color
+  if (tailwindClass.includes('from-red-600') || tailwindClass.includes('to-red-800')) {
+    return '#dc2626'; // red-600
+  }
+  if (tailwindClass.includes('from-yellow-400') || tailwindClass.includes('to-yellow-600')) {
+    return '#facc15'; // yellow-400
+  }
+  if (tailwindClass.includes('from-green-500') || tailwindClass.includes('to-green-700')) {
+    return '#22c55e'; // green-500
+  }
+
+  // Handle solid color classes
+  if (tailwindClass.includes('bg-red-')) {
+    return '#dc2626';
+  }
+  if (tailwindClass.includes('bg-yellow-')) {
+    return '#facc15';
+  }
+  if (tailwindClass.includes('bg-green-')) {
+    return '#22c55e';
+  }
+
+  // Return empty string if no match found
+  return '';
+};
+
 // Define navigation types for type safety
 type RootStackParamList = {
   Dashboard: undefined;
@@ -255,19 +287,31 @@ const Dashboard = () => {
             {filteredProjects.map((project, idx) => {
               // Use backend color and risk label if available
               const cardInfo = projectCardInfo[project.id] || {};
-              let cardBg = cardInfo.color || riskColors.low;
+              // Convert Tailwind CSS class to React Native color
+              const backendColor = convertTailwindToColor(cardInfo.color || '');
+              let cardBg = backendColor || riskColors.low;
               let riskLabel = cardInfo.riskLabel || 'Low Risk';
               let labelStyle = styles.circleLabelGreen;
-              // If project is medium risk, force yellow color and label
+
+              // Determine risk level and styling, but preserve backend color if available
               if ((project.risk === 'medium') || riskLabel.toLowerCase().includes('medium')) {
-                cardBg = riskColors.medium;
+                // Only override color if backend didn't provide one
+                if (!backendColor) {
+                  cardBg = riskColors.medium;
+                }
                 labelStyle = styles.circleLabelYellow;
                 riskLabel = 'Medium Risk';
               } else if ((project.risk === 'high') || riskLabel.toLowerCase().includes('high')) {
+                // Only override color if backend didn't provide one
+                if (!backendColor) {
+                  cardBg = riskColors.high;
+                }
                 labelStyle = styles.circleLabelRed;
               } else if ((project.risk === 'low' || (!riskLabel.toLowerCase().includes('high') && !riskLabel.toLowerCase().includes('medium')))) {
-                // For low risk, use solid green background and label
-                cardBg = riskColors.low;
+                // For low risk, only override color if backend didn't provide one
+                if (!backendColor) {
+                  cardBg = riskColors.low;
+                }
                 riskLabel = 'Low';
                 labelStyle = styles.circleLabelGreen;
               }

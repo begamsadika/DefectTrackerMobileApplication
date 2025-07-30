@@ -68,6 +68,38 @@ const riskColors = {
   low: '#0b9c40',
 };
 
+// Function to convert Tailwind CSS classes to React Native colors
+const convertTailwindToColor = (tailwindClass: string): string => {
+  if (!tailwindClass || typeof tailwindClass !== 'string') {
+    return '';
+  }
+
+  // Handle gradient classes - extract the primary color
+  if (tailwindClass.includes('from-red-600') || tailwindClass.includes('to-red-800')) {
+    return '#dc2626'; // red-600
+  }
+  if (tailwindClass.includes('from-yellow-400') || tailwindClass.includes('to-yellow-600')) {
+    return '#facc15'; // yellow-400
+  }
+  if (tailwindClass.includes('from-green-500') || tailwindClass.includes('to-green-700')) {
+    return '#22c55e'; // green-500
+  }
+
+  // Handle solid color classes
+  if (tailwindClass.includes('bg-red-')) {
+    return '#dc2626';
+  }
+  if (tailwindClass.includes('bg-yellow-')) {
+    return '#facc15';
+  }
+  if (tailwindClass.includes('bg-green-')) {
+    return '#22c55e';
+  }
+
+  // Return empty string if no match found
+  return '';
+};
+
 
 const ProjectDetails = () => {
   const [showPieModal, setShowPieModal] = useState(false);
@@ -237,16 +269,24 @@ const ProjectDetails = () => {
   // Compute risk and label using backend-driven logic (like Dashboard)
   let risk: 'high' | 'medium' | 'low' = 'low';
   let riskLabel = 'Low Risk';
-  let cardBg = projectCardInfo.color || riskColors.low;
+  // Convert Tailwind CSS class to React Native color
+  const backendColor = convertTailwindToColor(projectCardInfo.color || '');
+  let cardBg = backendColor || riskColors.low;
   let labelStyle = { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginTop: 10 };
   if ((selectedProject?.risk === 'medium') || (projectCardInfo.riskLabel || '').toLowerCase().includes('medium')) {
     risk = 'medium';
-    cardBg = riskColors.medium;
+    // Only override color if backend didn't provide one
+    if (!backendColor) {
+      cardBg = riskColors.medium;
+    }
     labelStyle = { ...labelStyle, backgroundColor: 'rgba(255,255,255,0.15)' };
     riskLabel = 'Medium Risk';
   } else if ((selectedProject?.risk === 'high') || (projectCardInfo.riskLabel || '').toLowerCase().includes('high')) {
     risk = 'high';
-    cardBg = projectCardInfo.color || riskColors.high;
+    // Only override color if backend didn't provide one
+    if (!backendColor) {
+      cardBg = riskColors.high;
+    }
     labelStyle = { ...labelStyle, backgroundColor: 'rgba(255,255,255,0.15)' };
     riskLabel = 'High Risk';
   }
