@@ -104,8 +104,8 @@ const Dashboard = () => {
       );
       return true; // Prevent default back action
     };
-    BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backHandler.remove();
   }, []);
   const [selectedRisk, setSelectedRisk] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [modalVisible, setModalVisible] = useState(false);
@@ -150,7 +150,7 @@ const Dashboard = () => {
   }, []);
 
   // Filter projects by selected risk, using the same logic as Project Status Insights
-  const filteredProjects = projects.filter((p) => {
+  let filteredProjects = projects.filter((p) => {
     const riskLabel = (projectCardInfo[p.id]?.riskLabel || '').toLowerCase();
     if (selectedRisk === 'all') return true;
     if (selectedRisk === 'high') return (p.risk === 'high') || riskLabel.includes('high');
@@ -158,6 +158,15 @@ const Dashboard = () => {
     if (selectedRisk === 'low') return (p.risk === 'low') || (!riskLabel.includes('high') && !riskLabel.includes('medium'));
     return true;
   });
+
+  // Sort filteredProjects: high, medium, low
+  const getRiskOrder = (p: { id: number; risk?: 'high' | 'medium' | 'low' }) => {
+    const riskLabel = (projectCardInfo[p.id]?.riskLabel || '').toLowerCase();
+    if ((p.risk === 'high') || riskLabel.includes('high')) return 0;
+    if ((p.risk === 'medium') || riskLabel.includes('medium')) return 1;
+    return 2; // low or unknown
+  };
+  filteredProjects = filteredProjects.slice().sort((a, b) => getRiskOrder(a) - getRiskOrder(b));
 
   return (
     <View style={styles.container}>
