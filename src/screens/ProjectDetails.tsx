@@ -114,8 +114,6 @@ const ProjectDetails = () => {
   // Defect Severity Index state
   const [dsi, setDSI] = useState<number | null>(null);
   const [dsiLoading, setDSILoading] = useState(false);
-  const [dsiLabel, setDSILabel] = useState('');
-  const [dsiColor, setDSIColor] = useState('#22c55e'); // default green
   // Fetch DSI when selected project changes
   useEffect(() => {
     if (selectedProject?.id) {
@@ -127,33 +125,11 @@ const ProjectDetails = () => {
           if (data && typeof data === 'object' && 'data' in data && typeof data.data === 'object' && 'dsiPercentage' in data.data) {
             dsiValue = typeof data.data.dsiPercentage === 'number' ? data.data.dsiPercentage : Number(data.data.dsiPercentage);
           }
-          if (typeof dsiValue === 'number' && !isNaN(dsiValue)) {
-            setDSI(dsiValue);
-            // Set label and color based on new ranges
-            if (dsiValue <= 25) {
-              setDSILabel('Excellent quality');
-              setDSIColor('#22c55e'); // green
-            } else if (dsiValue <= 50) {
-              setDSILabel('Good but some concern');
-              setDSIColor('#facc15'); // yellow
-            } else if (dsiValue <= 75) {
-              setDSILabel('Significant risk');
-              setDSIColor('#f59e0b'); // orange
-            } else {
-              setDSILabel('Critical – high severity issues');
-              setDSIColor('#ef4444'); // red
-            }
-          } else {
-            setDSI(null);
-            setDSILabel('');
-            setDSIColor('#22c55e');
-          }
+          setDSI(typeof dsiValue === 'number' && !isNaN(dsiValue) ? dsiValue : null);
         })
         .catch((error) => {
           console.error('Failed to fetch DSI:', error);
           setDSI(null);
-          setDSILabel('');
-          setDSIColor('#22c55e');
         })
         .finally(() => setDSILoading(false));
     }
@@ -603,7 +579,7 @@ const ProjectDetails = () => {
             <View style={[styles.summaryCard, { paddingTop: 10, paddingBottom: 40, minHeight: 220 }]}> 
               <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
                 Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>
-                  {defectDensityLoading ? 'Loading...' : defectDensity !== null ? defectDensity.toFixed(2) : 'No Data'}
+                  {defectDensityLoading ? 'Loading...' : defectDensity !== null ? defectDensity : 'No Data'}
                 </Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
@@ -621,7 +597,7 @@ const ProjectDetails = () => {
                 <View style={{
                   width: 28,
                   height: dsi !== null && !dsiLoading ? Math.max(0, Math.min(100, dsi)) : 0,
-                  backgroundColor: dsiColor,
+                  backgroundColor: '#ef4444',
                   borderRadius: 14,
                   position: 'absolute',
                   bottom: 0,
@@ -642,10 +618,7 @@ const ProjectDetails = () => {
               {dsiLoading ? (
                 <Text style={{ fontSize: 24, color: '#64748b', textAlign: 'center', marginBottom: 2 }}>Loading...</Text>
               ) : dsi !== null ? (
-                <>
-                  <Text style={{ fontSize: 40, fontWeight: 'bold', color: dsiColor, textAlign: 'center', marginBottom: 2 }}>{dsi.toFixed(2)}%</Text>
-                  <Text style={{ fontSize: 15, color: dsiColor, textAlign: 'center', maxWidth: 180, fontWeight: 'bold' }}>{dsiLabel}</Text>
-                </>
+                <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>{dsi}</Text>
               ) : (
                 <Text style={{ fontSize: 24, color: '#64748b', textAlign: 'center', marginBottom: 2 }}>No Data</Text>
               )}
@@ -896,11 +869,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 18,
     padding: 24,
-    minWidth: 320,
-    maxWidth: 420,
+    minWidth: 100,
     alignItems: 'center',
     elevation: 8,
-    maxHeight: 800, // increased to allow more vertical space for chart and legend
+    maxHeight: 640,
     // paddingVertical: ,
   },
   modalTitle: {
