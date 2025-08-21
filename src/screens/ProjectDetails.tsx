@@ -4,7 +4,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
-import { getProjects } from '../api/projectget';
+// import { getProjects } from '../api/projectget';
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -63,35 +63,20 @@ const ProjectDetails = () => {
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
   const navigation = useNavigation();
-  const [projects, setProjects] = useState<any[]>([]);
-  const [selectedProject, setSelectedProject] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Static projects data
+  const projects: { name: string; risk: 'high' | 'medium' | 'low' }[] = [
+    { name: 'E-Commerce Platform', risk: 'high' },
+    { name: 'Mobile Banking App', risk: 'medium' },
+    { name: 'Inventory Management System', risk: 'low' },
+  ];
+  const [selectedProject, setSelectedProject] = useState<{ name: string; risk: 'high' | 'medium' | 'low' } | null>(projects[0]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // @ts-ignore
-  const { project: initialProject } = route.params || {};
 
-  useEffect(() => {
-    setLoading(true);
-    getProjects()
-      .then((data) => {
-        setProjects(data);
-        // If initialProject is provided, select it; otherwise, select the first project
-        if (initialProject) {
-          setSelectedProject(initialProject);
-        } else if (data.length > 0) {
-          setSelectedProject(data[0]);
-        }
-        setError(null);
-      })
-      .catch((err) => {
-        setError('Failed to load projects');
-        setProjects([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // Removed project get integration. Using static projects.
 
   // If project.risk is not present, default to 'low'
-  const risk = selectedProject?.risk || 'low';
+  const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
   const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
 
   // Pie chart data for "Defects Reopened Multiple Times"
@@ -134,7 +119,7 @@ const ProjectDetails = () => {
         <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
         {/* Profile image overlapping bottom left of header */}
         <View style={styles.headerProfileOverlapWrap}>
-          <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+          <TouchableOpacity onPress={() => (navigation as any).navigate('Settings')}>
             <View style={styles.headerProfileCircle}>
               <Image
                 source={require('../assets/prfile.jpg')}
@@ -184,7 +169,7 @@ const ProjectDetails = () => {
               <TouchableOpacity
                 key={proj.name + idx}
                 style={[styles.chip, selectedProject?.name === proj.name ? styles.chipActive : null]}
-                onPress={() => setSelectedProject(proj)}
+                onPress={() => setSelectedProject({ name: proj.name, risk: proj.risk as 'high' | 'medium' | 'low' })}
               >
                 <Text style={[styles.chipText, selectedProject?.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
               </TouchableOpacity>
@@ -650,10 +635,7 @@ const styles = StyleSheet.create({
   },
   closeModalButtonText: {
     color: '#fff',
-    // fontWeight: 'bold',
     fontSize: 20,
-    // fontWeight: 'bold',
-    color: 'white',
     marginBottom: 2,
     textAlign: 'center',
   },
