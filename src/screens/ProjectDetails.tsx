@@ -65,9 +65,9 @@ const ProjectDetails = () => {
   const navigation = useNavigation();
   // Static projects data
   const projects: { name: string; risk: 'high' | 'medium' | 'low' }[] = [
-    { name: 'E-Commerce Platform', risk: 'high' },
-    { name: 'Mobile Banking App', risk: 'medium' },
-    { name: 'Inventory Management System', risk: 'low' },
+    { name: 'Defect Tracker', risk: 'high' },
+    { name: 'Mobile Banking ', risk: 'medium' },
+    { name: 'Inventory ', risk: 'low' },
   ];
   const [selectedProject, setSelectedProject] = useState<{ name: string; risk: 'high' | 'medium' | 'low' } | null>(projects[0]);
   const [loading, setLoading] = useState(false);
