@@ -48,10 +48,7 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
             },
           ]}
         />
-        <View style={styles.centerTextContainer}>
-          <Text style={styles.centerValue}>{currentValue.toFixed(4)}</Text>
-          <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.text}</Text>
-        </View>
+        
       </View>
     </View>
   );
