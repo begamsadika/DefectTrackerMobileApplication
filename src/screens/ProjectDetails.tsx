@@ -4,7 +4,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
-// import { getProjects } from '../api/projectget';
+import { getProjects } from '../api/projectget';
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -63,19 +63,43 @@ const ProjectDetails = () => {
   const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
   const route = useRoute();
   const navigation = useNavigation();
-  // Static projects data
-  const projects: { name: string; risk: 'high' | 'medium' | 'low' }[] = [
-    { name: 'Defect Tracker', risk: 'high' },
-    { name: 'Mobile Banking ', risk: 'medium' },
-    { name: 'Inventory ', risk: 'low' },
-  ];
-  const [selectedProject, setSelectedProject] = useState<{ name: string; risk: 'high' | 'medium' | 'low' } | null>(projects[0]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Removed project get integration. Using static projects.
+  // Function to map project_status to risk
+  const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
+    switch (status) {
+      case 'IN_PROGRESS':
+        return 'high'; // Or 'medium' depending on your logic
+      case 'PLANNED':
+        return 'medium'; // Or 'low'
+      case 'COMPLETED':
+        return 'low';
+      default:
+        return 'low'; // Default to low risk
+    }
+  };
 
-  // If project.risk is not present, default to 'low'
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        const fetchedProjects = await getProjects();
+        setProjects(fetchedProjects);
+        if (fetchedProjects.length > 0) {
+          setSelectedProject({ ...fetchedProjects[0], risk: getRiskFromStatus(fetchedProjects[0].project_status) });
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
   const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
   const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
 
@@ -110,14 +134,19 @@ const ProjectDetails = () => {
 
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
+    navigation.setOptions({
+      headerShown: true,
+      title: 'Project Details',
+      headerStyle: { backgroundColor: '#fff' },
+      headerTintColor: '#14316e',
+      headerTitleStyle: { fontWeight: 'bold' },
+    });
   }, [navigation]);
   return (
     <View style={styles.container}>
-      {/* Blue Section with Defect Tracker and Profile */}
-      <View style={styles.blueHeaderSection}>
+      {/* Remove the custom blue header section */}
+      {/* <View style={styles.blueHeaderSection}>
         <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
-        {/* Profile image overlapping bottom left of header */}
         <View style={styles.headerProfileOverlapWrap}>
           <TouchableOpacity onPress={() => (navigation as any).navigate('Settings')}>
             <View style={styles.headerProfileCircle}>
@@ -128,11 +157,11 @@ const ProjectDetails = () => {
             </View>
           </TouchableOpacity>
         </View>
-      </View>
+      </View> */}
 
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
-        <Text style={styles.projectStatusCardName}>{selectedProject?.name}</Text>
+        <Text style={styles.projectStatusCardName}>{selectedProject?.project_name}</Text>
         <TouchableOpacity
           style={[
             styles.statusPill,
@@ -165,13 +194,13 @@ const ProjectDetails = () => {
           <Text style={{ color: 'red' }}>{error}</Text>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
-            {projects.map((proj, idx) => (
+            {projects.map((proj: any, idx: number) => (
               <TouchableOpacity
-                key={proj.name + idx}
-                style={[styles.chip, selectedProject?.name === proj.name ? styles.chipActive : null]}
-                onPress={() => setSelectedProject({ name: proj.name, risk: proj.risk as 'high' | 'medium' | 'low' })}
+                key={proj.id || idx} // Use proj.id if available, otherwise fallback to idx
+                style={[styles.chip, selectedProject?.id === proj.id ? styles.chipActive : null]}
+                onPress={() => setSelectedProject({ ...proj, risk: getRiskFromStatus(proj.project_status) })}
               >
-                <Text style={[styles.chipText, selectedProject?.name === proj.name ? styles.chipTextActive : null]}>{proj.name}</Text>
+                <Text style={[styles.chipText, selectedProject?.id === proj.id ? styles.chipTextActive : null]}>{proj.project_name}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
