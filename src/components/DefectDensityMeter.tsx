@@ -8,12 +8,11 @@ interface DefectDensityMeterProps {
 }
 
 const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
-  defectDensity = 8.00
+  defectDensity,
 }) => {
-  const [inputValue, setInputValue] = useState(defectDensity.toString());
-  const currentValue = parseFloat(inputValue) || defectDensity;
+  const currentValue = defectDensity !== undefined && defectDensity !== null ? defectDensity : 0;
 
-  // Determine status text and color based on value (Green: 1-7, Yellow: 7-10, Red: 10-12)
+  // Determine status text and color based on value (Green: 0-7, Yellow: 7-10, Red: 10-12)
   const getStatusInfo = (value: number) => {
     if (value < 7) return { text: 'Good', color: '#22c55e' };
     if (value < 10) return { text: 'Average', color: '#facc15' };
@@ -22,29 +21,15 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
 
   const statusInfo = getStatusInfo(currentValue);
 
-  const onChange = (value: string) => setInputValue(value);
-
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.title}>Defect Density</Text> */}
-
-      {/* Input for speedometer value */}
-      {/* <TextInput
-        placeholder="Enter Density Value"
-        style={styles.textInput}
-        onChangeText={onChange}
-        value={inputValue}
-        keyboardType="numeric"
-      /> */}
-
-      {/* React Native Speedometer */}
       <View style={styles.speedometerContainer}>
         <RNSpeedometer
-          value={Math.max(1, Math.min(currentValue, 12))}
+          value={Math.max(0, Math.min(currentValue, 12))}
           size={200}
-          minValue={1}
+          minValue={0}
           maxValue={12}
-          allowedDecimals={2}
+          allowedDecimals={4} // Allow 4 decimal places for the speedometer itself
           labels={[
             {
               name: 'Good',
@@ -63,8 +48,10 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
             },
           ]}
         />
-
-      
+        <View style={styles.centerTextContainer}>
+          <Text style={styles.centerValue}>{currentValue.toFixed(4)}</Text>
+          <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.text}</Text>
+        </View>
       </View>
     </View>
   );
@@ -106,10 +93,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     marginTop: 20,
+    position: 'relative', // Needed for absolute positioning of children
   },
-  statusContainer: {
+  centerTextContainer: {
+    position: 'absolute',
+    top: '55%', // Adjust as needed to center vertically
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    marginTop: 20,
+    justifyContent: 'center',
   },
   centerValue: {
     fontSize: 36,

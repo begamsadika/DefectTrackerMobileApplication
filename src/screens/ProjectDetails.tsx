@@ -6,6 +6,7 @@ import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { getProjects } from '../api/projectget';
 import { getDefectDensity } from '../api/defectdensity'; // Import getDefectDensity
+import { getDefectRemarkRatio } from '../api/defectremarkratio'; // Import getDefectRemarkRatio
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -71,6 +72,10 @@ const ProjectDetails = () => {
   const [defectDensity, setDefectDensity] = useState<number | null>(null);
   const [defectDensityLoading, setDefectDensityLoading] = useState(false);
   const [defectDensityError, setDefectDensityError] = useState<string | null>(null);
+  const [defectRemarkRatio, setDefectRemarkRatio] = useState<number | null>(null);
+  const [ratioLabel, setRatioLabel] = useState<string | null>(null);
+  const [defectRemarkRatioLoading, setDefectRemarkRatioLoading] = useState(false);
+  const [defectRemarkRatioError, setDefectRemarkRatioError] = useState<string | null>(null);
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -118,6 +123,24 @@ const ProjectDetails = () => {
         }
       };
       fetchDefectDensity();
+    }
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchDefectRemarkRatio = async () => {
+        setDefectRemarkRatioLoading(true);
+        try {
+          const data = await getDefectRemarkRatio(selectedProject.id);
+          setDefectRemarkRatio(data.data.defectToRemarkRatio);
+          setRatioLabel(data.ratioLabel);
+        } catch (err: any) {
+          setDefectRemarkRatioError(err.message || 'Failed to fetch defect to remark ratio');
+        } finally {
+          setDefectRemarkRatioLoading(false);
+        }
+      };
+      fetchDefectRemarkRatio();
     }
   }, [selectedProject]);
 
@@ -365,9 +388,9 @@ const ProjectDetails = () => {
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
               <View style={styles.ratioBox}>
-                <Text style={styles.ratioValue}>44.44%</Text>
+                <Text style={styles.ratioValue}>{defectRemarkRatioLoading ? 'Loading...' : defectRemarkRatioError ? 'Error' : (defectRemarkRatio !== null && typeof defectRemarkRatio === 'number') ? `${defectRemarkRatio.toFixed(2)}%` : 'N/A'}</Text>
                 <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
-                <View style={styles.ratioBadge}><Text style={styles.ratioBadgeText}>High</Text></View>
+                <View style={[styles.ratioBadge, ratioLabel === 'High' ? {backgroundColor: '#ef4444'} : ratioLabel === 'Medium' ? {backgroundColor: '#facc15'} : {backgroundColor: '#22c55e'}]}><Text style={styles.ratioBadgeText}>{ratioLabel || 'N/A'}</Text></View>
               </View>
             </View>
           </View>
