@@ -161,7 +161,7 @@ const ProjectDetails = () => {
 
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
-        <Text style={styles.projectStatusCardName}>{selectedProject?.project_name}</Text>
+        <Text style={styles.projectStatusCardName} numberOfLines={2} ellipsizeMode='tail'>{selectedProject?.project_name}</Text>
         <TouchableOpacity
           style={[
             styles.statusPill,
@@ -967,6 +967,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#14316e',
+    flexShrink: 1,
   },
   projectStatusCardLabel: {
     fontSize: 14,
