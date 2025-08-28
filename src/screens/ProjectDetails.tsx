@@ -5,6 +5,7 @@ import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { getProjects } from '../api/projectget';
+import { getDefectDensity } from '../api/defectdensity'; // Import getDefectDensity
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -67,6 +68,9 @@ const ProjectDetails = () => {
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [defectDensity, setDefectDensity] = useState<number | null>(null);
+  const [defectDensityLoading, setDefectDensityLoading] = useState(false);
+  const [defectDensityError, setDefectDensityError] = useState<string | null>(null);
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -99,6 +103,23 @@ const ProjectDetails = () => {
     };
     fetchProjects();
   }, []);
+
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchDefectDensity = async () => {
+        setDefectDensityLoading(true);
+        try {
+          const data = await getDefectDensity(selectedProject.id);
+          setDefectDensity(data.data.defectDensity);
+        } catch (err: any) {
+          setDefectDensityError(err.message || 'Failed to fetch defect density');
+        } finally {
+          setDefectDensityLoading(false);
+        }
+      };
+      fetchDefectDensity();
+    }
+  }, [selectedProject]);
 
   const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
   const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
@@ -300,10 +321,18 @@ const ProjectDetails = () => {
             {/* Defect Density Card - Increased Y Axis Size */}
             <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
               <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
-                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{4.36}</Text>
+                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{defectDensityLoading ? 'Loading...' : defectDensityError ? 'Error' : (defectDensity !== null && typeof defectDensity === 'number') ? defectDensity.toFixed(4) : 'N/A'}</Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
-              <DefectDensityMeter defectDensity={4.36} />
+              {defectDensityLoading ? (
+                <Text>Loading defect density meter...</Text>
+              ) : defectDensityError ? (
+                <Text style={{ color: 'red' }}>{defectDensityError}</Text>
+              ) : defectDensity !== null ? (
+                <DefectDensityMeter defectDensity={defectDensity} />
+              ) : (
+                <Text>No defect density data available.</Text>
+              )}
             </View>
         {/* Defect Severity Index - Updated to match screenshot */}
         <View style={[styles.summaryCard, { minHeight: 180, alignItems: 'center', justifyContent: 'center', paddingTop: 32, paddingBottom: 32 }]}> 
