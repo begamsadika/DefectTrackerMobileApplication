@@ -132,8 +132,8 @@ const ProjectDetails = () => {
         setDefectRemarkRatioLoading(true);
         try {
           const data = await getDefectRemarkRatio(selectedProject.id);
-          setDefectRemarkRatio(data.data.defectToRemarkRatio);
-          setRatioLabel(data.ratioLabel);
+          setDefectRemarkRatio(parseFloat(data.data.ratio));
+          setRatioLabel(data.data.category);
         } catch (err: any) {
           setDefectRemarkRatioError(err.message || 'Failed to fetch defect to remark ratio');
         } finally {
@@ -387,7 +387,7 @@ const ProjectDetails = () => {
             {/* Defect to Remark Ratio */}
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>Defect to Remark Ratio</Text>
-              <View style={styles.ratioBox}>
+              <View style={[styles.ratioBox, ratioLabel === 'High' ? { backgroundColor: '#fdecec' } : ratioLabel === 'Medium' ? { backgroundColor: '#fef9c3' } : { backgroundColor: '#dcfce7' }]}>
                 <Text style={styles.ratioValue}>{defectRemarkRatioLoading ? 'Loading...' : defectRemarkRatioError ? 'Error' : (defectRemarkRatio !== null && typeof defectRemarkRatio === 'number') ? `${defectRemarkRatio.toFixed(2)}%` : 'N/A'}</Text>
                 <Text style={styles.ratioDesc}>Defect to Remark Ratio (%)</Text>
                 <View style={[styles.ratioBadge, ratioLabel === 'High' ? {backgroundColor: '#ef4444'} : ratioLabel === 'Medium' ? {backgroundColor: '#facc15'} : {backgroundColor: '#22c55e'}]}><Text style={styles.ratioBadgeText}>{ratioLabel || 'N/A'}</Text></View>
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   ratioBadge: {
-    backgroundColor: '#ef4444',
+    // backgroundColor: '#ef4444',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 4,
@@ -692,7 +692,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   ratioBox: {
-    backgroundColor: '#fecaca',
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
