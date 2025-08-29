@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Feather';
 import DefectPieChart from '../components/DefectPieCharts';
 import DefectDensityMeter from '../components/DefectDensityMeter';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
@@ -177,19 +178,10 @@ const ProjectDetails = () => {
 
 
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      title: 'Project Details',
-      headerStyle: { backgroundColor: '#fff' },
-      headerTintColor: '#14316e',
-      headerTitleStyle: { fontWeight: 'bold' },
-    });
-  }, [navigation]);
   return (
     <View style={styles.container}>
-      {/* Remove the custom blue header section */}
-      {/* <View style={styles.blueHeaderSection}>
+      {/* Custom blue header section */}
+      <View style={styles.blueHeaderSection}>
         <Text style={styles.bigDefectTracker}>Defect Tracker</Text>
         <View style={styles.headerProfileOverlapWrap}>
           <TouchableOpacity onPress={() => (navigation as any).navigate('Settings')}>
@@ -201,7 +193,7 @@ const ProjectDetails = () => {
             </View>
           </TouchableOpacity>
         </View>
-      </View> */}
+      </View>
 
       {/* Project name and status card/button below header */}
       <View style={styles.projectStatusCardButton}>
