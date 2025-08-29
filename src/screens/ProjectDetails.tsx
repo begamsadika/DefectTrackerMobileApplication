@@ -8,6 +8,7 @@ import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
 import { getProjects } from '../api/projectget';
 import { getDefectDensity } from '../api/defectdensity'; // Import getDefectDensity
 import { getDefectRemarkRatio } from '../api/defectremarkratio'; // Import getDefectRemarkRatio
+import { getDefectSeverityIndex } from '../api/severityindex'; // Import getDefectSeverityIndex
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -77,6 +78,9 @@ const ProjectDetails = () => {
   const [ratioLabel, setRatioLabel] = useState<string | null>(null);
   const [defectRemarkRatioLoading, setDefectRemarkRatioLoading] = useState(false);
   const [defectRemarkRatioError, setDefectRemarkRatioError] = useState<string | null>(null);
+  const [defectSeverityIndex, setDefectSeverityIndex] = useState<number | null>(null); // State for defect severity index
+  const [defectSeverityIndexLoading, setDefectSeverityIndexLoading] = useState(false); // Loading state for severity index
+  const [defectSeverityIndexError, setDefectSeverityIndexError] = useState<string | null>(null); // Error state for severity index
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -142,6 +146,24 @@ const ProjectDetails = () => {
         }
       };
       fetchDefectRemarkRatio();
+    }
+  }, [selectedProject]);
+
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchDefectSeverityIndex = async () => {
+        setDefectSeverityIndexLoading(true);
+        try {
+          const data = await getDefectSeverityIndex(selectedProject.id);
+          const dsiValue = parseFloat(data.data.data.dsiPercentage);
+          setDefectSeverityIndex(isNaN(dsiValue) ? null : dsiValue);
+        } catch (err: any) {
+          setDefectSeverityIndexError(err.message || 'Failed to fetch defect severity index');
+        } finally {
+          setDefectSeverityIndexLoading(false);
+        }
+      };
+      fetchDefectSeverityIndex();
     }
   }, [selectedProject]);
 
@@ -357,7 +379,7 @@ const ProjectDetails = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
             <View style={{ alignItems: 'center', marginRight: 18 }}>
               <View style={{ width: 28, height: 100, backgroundColor: '#f1f5f9', borderRadius: 14, justifyContent: 'flex-end', alignItems: 'center', overflow: 'hidden' }}>
-                <View style={{ width: 28, height: 62, backgroundColor: '#ef4444', borderRadius: 14 }} />
+                <View style={{ width: 28, height: ((defectSeverityIndex || 0) / 100) * 100, backgroundColor: '#ef4444', borderRadius: 14 }} />
               </View>
               {/* Y axis labels */}
               <View style={{ position: 'absolute', left: -32, top: 0, height: 100, justifyContent: 'space-between' }}>
@@ -369,7 +391,9 @@ const ProjectDetails = () => {
               </View>
             </View>
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>62.5</Text>
+              <Text style={{ fontSize: 40, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', marginBottom: 2 }}>
+                {defectSeverityIndexLoading ? 'Loading...' : defectSeverityIndexError ? 'Error' : (defectSeverityIndex !== null && typeof defectSeverityIndex === 'number') ? defectSeverityIndex.toFixed(1) : 'N/A'}
+              </Text>
               <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', maxWidth: 180 }}>
                 Weighted severity score (higher = more severe defects)
               </Text>

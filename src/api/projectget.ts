@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const getProjects = async () => {
   try {
-    const response = await axios.get('http://10.0.2.2:3000/api/projects');
+    const response = await axios.get('http://192.168.1.15:3000/api/projects');
     console.log('Full Axios Response:', response);
     console.log('Response Data:', response.data);
     console.log('Success:', response.data.message); // Log success message

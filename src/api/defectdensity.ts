@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const getDefectDensity = async (projectId: number | string) => {
   try {
-    const response = await axios.get(`http://10.0.2.2:3000/api/dashboard/defect-density/${projectId}`);
+    const response = await axios.get(`http://192.168.1.15:3000/api/dashboard/defect-density/${projectId}`);
     console.log(`Defect Density Response for Project ${projectId}:`, response.data);
     console.log('Success:', response.data.message);
     return response.data;
