@@ -3,6 +3,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackg
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import { getProjects } from '../api/projectget';
+
+interface Project {
+  id: number;
+  project_name: string;
+  project_status: string;
+  risk: 'high' | 'medium' | 'low';
+}
 
 // Icon component with fallback
 interface SafeIconProps {
@@ -53,16 +61,49 @@ const riskColors = {
   low: '#0b9c40',
 };
 
+// Function to map project_status to risk
+const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
+  switch (status) {
+    case 'IN_PROGRESS':
+      return 'high'; // Or 'medium' depending on your logic
+    case 'PLANNED':
+      return 'medium'; // Or 'low'
+    case 'COMPLETED':
+      return 'low';
+    default:
+      return 'low'; // Default to low risk
+  }
+};
+
 const Dashboard = () => {
   const [selectedRisk, setSelectedRisk] = React.useState('all');
   const [modalVisible, setModalVisible] = React.useState(false);
   const navigation = useNavigation();
+  const [projects, setProjects] = React.useState<Project[]>([]); // State for fetched projects
+  const [loading, setLoading] = React.useState(true); // Loading state
+  const [error, setError] = React.useState<string | null>(null); // Error state
+
+  React.useEffect(() => {
+    const fetchProjectsData = async () => {
+      try {
+        setLoading(true);
+        const fetchedProjects = await getProjects();
+        // Assuming getProjects returns an object with a 'data' property that is an array
+        setProjects(fetchedProjects.map((project: any) => ({ ...project, risk: getRiskFromStatus(project.project_status) })) || []); 
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjectsData();
+  }, []);
 
   // Sort projects: high (red), then medium (yellow), then low (green)
   const riskOrder = { high: 0, medium: 1, low: 2 };
   const filteredProjects = (selectedRisk === 'all'
-    ? PROJECTS
-    : PROJECTS.filter(p => p.risk === selectedRisk)
+    ? projects
+    : projects.filter(p => p.risk === selectedRisk)
   ).slice().sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
 
   return (
@@ -139,45 +180,53 @@ const Dashboard = () => {
         {/* <View style={styles.sectionDivider} /> */}
 
         <Text style={[styles.sectionTitless, { marginLeft: 20 }]}>Project Status Insights</Text>
-        {/* High Risk Projects Card */}
-        <View style={styles.cardsRow}>
-          <View style={[styles.card, styles.cardRed]}>
-            <View style={styles.cardHeaderRow}>
-              <View style={[styles.cardIconCircleRedCustom, { backgroundColor: riskColors.high }]}> 
-                <SafeIcon name="alert-circle" size={26} color="#fff" fallbackText="⚠" />
+        {loading ? (
+          <Text style={{ textAlign: 'center', fontSize: 16, color: '#14316e', marginTop: 20 }}>Loading projects...</Text>
+        ) : error ? (
+          <Text style={{ textAlign: 'center', fontSize: 16, color: 'red', marginTop: 20 }}>Error: {error}</Text>
+        ) : (
+          <>
+            {/* High Risk Projects Card */}
+            <View style={styles.cardsRow}>
+              <View style={[styles.card, styles.cardRed]}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={[styles.cardIconCircleRedCustom, { backgroundColor: riskColors.high }]}> 
+                    <SafeIcon name="alert-circle" size={26} color="#fff" fallbackText="⚠" />
+                  </View>
+                  <Text style={styles.cardTitle}>High Risk Projects</Text>
+                  <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{projects.filter(p => p.risk === 'high').length}</Text>
+                </View>
+                <Text style={[styles.cardStatusRed, { color: riskColors.high }]}>Immediate attention required</Text>
               </View>
-              <Text style={styles.cardTitle}>High Risk Projects</Text>
-              <Text style={[styles.cardCountRed, { color: riskColors.high }]}>{PROJECTS.filter(p => p.risk === 'high').length}</Text>
             </View>
-            <Text style={[styles.cardStatusRed, { color: riskColors.high }]}>Immediate attention required</Text>
-          </View>
-        </View>
-        {/* Medium Risk Projects Card */}
-        <View style={styles.cardsRow}>
-          <View style={[styles.card, styles.cardYellow]}>
-            <View style={styles.cardHeaderRow}>
-              <View style={[styles.cardIconCircleYellow, { backgroundColor: riskColors.medium }]}> 
-                <SafeIcon name="clock" size={24} color="#fff" fallbackText="⏰" />
+            {/* Medium Risk Projects Card */}
+            <View style={styles.cardsRow}>
+              <View style={[styles.card, styles.cardYellow]}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={[styles.cardIconCircleYellow, { backgroundColor: riskColors.medium }]}> 
+                    <SafeIcon name="clock" size={24} color="#fff" fallbackText="⏰" />
+                  </View>
+                  <Text style={styles.cardTitle}>Medium Risk Projects</Text>
+                  <Text style={[styles.cardCountYellow, { color: riskColors.medium }]}>{projects.filter(p => p.risk === 'medium').length}</Text>
+                </View>
+                <Text style={[styles.cardStatusYellow, { color: riskColors.medium }]}>Monitor progress closely</Text>
               </View>
-              <Text style={styles.cardTitle}>Medium Risk Projects</Text>
-              <Text style={[styles.cardCountYellow, { color: riskColors.medium }]}>{PROJECTS.filter(p => p.risk === 'medium').length}</Text>
             </View>
-            <Text style={[styles.cardStatusYellow, { color: riskColors.medium }]}>Monitor progress closely</Text>
-          </View>
-        </View>
-        {/* Low Risk Projects Card */}
-        <View style={styles.cardsRow}>
-          <View style={[styles.card, styles.cardGreen]}>
-            <View style={styles.cardHeaderRow}>
-              <View style={[styles.cardIconCircleGreen, { backgroundColor: riskColors.low }]}> 
-                <SafeIcon name="check-circle" size={24} color="#fff" fallbackText="✓" />
+            {/* Low Risk Projects Card */}
+            <View style={styles.cardsRow}>
+              <View style={[styles.card, styles.cardGreen]}>
+                <View style={styles.cardHeaderRow}>
+                  <View style={[styles.cardIconCircleGreen, { backgroundColor: riskColors.low }]}> 
+                    <SafeIcon name="check-circle" size={24} color="#fff" fallbackText="✓" />
+                  </View>
+                  <Text style={styles.cardTitle}>Low Risk Projects</Text>
+                  <Text style={[styles.cardCountGreen, { color: riskColors.low }]}>{projects.filter(p => p.risk === 'low').length}</Text>
+                </View>
+                <Text style={[styles.cardStatusGreen, { color: riskColors.low }]}>Stable and on track</Text>
               </View>
-              <Text style={styles.cardTitle}>Low Risk Projects</Text>
-              <Text style={[styles.cardCountGreen, { color: riskColors.low }]}>{PROJECTS.filter(p => p.risk === 'low').length}</Text>
             </View>
-            <Text style={[styles.cardStatusGreen, { color: riskColors.low }]}>Stable and on track</Text>
-          </View>
-        </View>
+          </>
+        )}
 
         <View style={{marginBottom: 24}}>
           <View style={styles.allProjectsCard}>
@@ -189,39 +238,47 @@ const Dashboard = () => {
             </TouchableOpacity>
           </View>
           <View style={styles.circleGrid}>
-            {filteredProjects.map((project, idx) => {
-              let cardStyle, labelStyle, labelText;
-              if (project.risk === 'high') {
-                cardStyle = [styles.circleRed, { backgroundColor: riskColors.high, borderColor: riskColors.high }];
-                labelStyle = styles.circleLabelRed;
-                labelText = 'High Risk';
-              } else if (project.risk === 'medium') {
-                cardStyle = [styles.circleYellow, { backgroundColor: riskColors.medium, borderColor: riskColors.medium }];
-                labelStyle = styles.circleLabelYellow;
-                labelText = 'Medium Risk';
-              } else {
-                cardStyle = [styles.circleGreen, { backgroundColor: riskColors.low, borderColor: riskColors.low }];
-                labelStyle = styles.circleLabelGreen;
-                labelText = 'Low Risk';
-              }
-              return (
-                <TouchableOpacity
-                  key={idx}
-                  style={[styles.circleCard, cardStyle]}
-                  activeOpacity={0.8}
-                  onPress={() => navigation.navigate('ProjectDetails', { project })}
-                >
-                  <SafeIcon
-                    name={project.risk === 'high' ? 'alert-circle' : project.risk === 'medium' ? 'clock' : 'check-circle'}
-                    size={40}
-                    color="#fff"
-                    fallbackText={project.risk === 'high' ? '⚠' : project.risk === 'medium' ? '⏰' : '✓'}
-                  />
-                  <Text style={styles.circleTitle}>{project.name}</Text>
-                  <View style={labelStyle}><Text style={styles.circleLabelText}>{labelText}</Text></View>
-                </TouchableOpacity>
-              );
-            })}
+            {loading ? (
+              <Text style={{ textAlign: 'center', fontSize: 16, color: '#14316e', marginTop: 20 }}>Loading projects...</Text>
+            ) : error ? (
+              <Text style={{ textAlign: 'center', fontSize: 16, color: 'red', marginTop: 20 }}>Error: {error}</Text>
+            ) : filteredProjects.length === 0 ? (
+              <Text style={{ textAlign: 'center', fontSize: 16, color: '#14316e', marginTop: 20 }}>No projects found for this filter.</Text>
+            ) : (
+              filteredProjects.map((project, idx) => {
+                let cardStyle, labelStyle, labelText;
+                if (project.risk === 'high') {
+                  cardStyle = [styles.circleRed, { backgroundColor: riskColors.high, borderColor: riskColors.high }];
+                  labelStyle = styles.circleLabelRed;
+                  labelText = 'High Risk';
+                } else if (project.risk === 'medium') {
+                  cardStyle = [styles.circleYellow, { backgroundColor: riskColors.medium, borderColor: riskColors.medium }];
+                  labelStyle = styles.circleLabelYellow;
+                  labelText = 'Medium Risk';
+                } else {
+                  cardStyle = [styles.circleGreen, { backgroundColor: riskColors.low, borderColor: riskColors.low }];
+                  labelStyle = styles.circleLabelGreen;
+                  labelText = 'Low Risk';
+                }
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[styles.circleCard, cardStyle]}
+                    activeOpacity={0.8}
+                    onPress={() => navigation.navigate('ProjectDetails', { project })}
+                  >
+                    <SafeIcon
+                      name={project.risk === 'high' ? 'alert-circle' : project.risk === 'medium' ? 'clock' : 'check-circle'}
+                      size={40}
+                      color="#fff"
+                      fallbackText={project.risk === 'high' ? '⚠' : project.risk === 'medium' ? '⏰' : '✓'}
+                    />
+                    <Text style={styles.circleTitle}>{project.project_name}</Text>
+                    {/* Removed the risk label below the project name */}
+                  </TouchableOpacity>
+                );
+              })
+            )}
           </View>
         </View>
       </ScrollView>
