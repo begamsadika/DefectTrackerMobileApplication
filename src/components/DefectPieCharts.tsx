@@ -87,6 +87,20 @@ const DefectPieChart: React.FC<DefectPieChartProps> = ({
   };
 
   const renderPieChart = () => {
+    // If only one segment, draw a full circle
+    if (segments.length === 1) {
+      const segment = segments[0];
+      return (
+        <Svg width={chartSize} height={chartSize}>
+          <Path
+            d={`M ${radius},${radius} m -${radius - 10},0 a ${radius - 10},${radius - 10} 0 1,0 ${2 * (radius - 10)},0 a ${radius - 10},${radius - 10} 0 1,0 -${2 * (radius - 10)},0`}
+            fill={segment.color}
+            stroke="#fff"
+            strokeWidth="2"
+          />
+        </Svg>
+      );
+    }
     return (
       <Svg width={chartSize} height={chartSize}>
         {segments.map((segment, index) => createPieSlice(segment, index))}

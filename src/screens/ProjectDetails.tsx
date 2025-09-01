@@ -174,11 +174,13 @@ const ProjectDetails = () => {
   }, [selectedProject]);
 
   useEffect(() => {
+    console.log('Selected project:', selectedProject);
     if (selectedProject?.id) {
       const fetchDefectDistribution = async () => {
         setDefectDistributionLoading(true);
         try {
           const data = await getDefectDistributionByType(selectedProject.id);
+          console.log('Defect distribution API response:', data);
           setDefectDistributionData(data.data.distribution || []);
         } catch (err: any) {
           setDefectDistributionError(err.message || 'Failed to fetch defect distribution by type');
@@ -460,19 +462,25 @@ const ProjectDetails = () => {
             ) : defectDistributionError ? (
               <Text style={{ color: 'red' }}>{defectDistributionError}</Text>
             ) : (
-              <DefectPieChart
-                title="Defect Distribution by Type"
-                data={defectDistributionData.map((item: any) => ({
+              (() => {
+                const chartData = defectDistributionData.map((item: any) => ({
                   label: item.defectType,
                   value: item.count,
-                  color: getDefectTypeColor(item.defectType), // Assign color dynamically
+                  color: getDefectTypeColor(item.defectType),
                   percentage: item.percentage,
-                }))}
-                totalLabel="TOTAL DEFECTS"
-                totalValue={defectDistributionData.reduce((sum: number, item: any) => sum + item.count, 0)}
-                mostCommonLabel={defectDistributionData.length > 0 ? `Most Common ${defectDistributionData.reduce((prev: any, current: any) => (prev.count > current.count) ? prev : current).defectType}` : "Most Common"}
-                mostCommonValue={defectDistributionData.length > 0 ? Math.max(...defectDistributionData.map((item: any) => item.count)) : 0}
-              />
+                }));
+                console.log('DefectPieChart data:', chartData);
+                return (
+                  <DefectPieChart
+                    title="Defect Distribution by Type"
+                    data={chartData}
+                    totalLabel="TOTAL DEFECTS"
+                    totalValue={defectDistributionData.reduce((sum: number, item: any) => sum + item.count, 0)}
+                    mostCommonLabel={defectDistributionData.length > 0 ? `Most Common ${defectDistributionData.reduce((prev: any, current: any) => (prev.count > current.count) ? prev : current).defectType}` : "Most Common"}
+                    mostCommonValue={defectDistributionData.length > 0 ? Math.max(...defectDistributionData.map((item: any) => item.count)) : 0}
+                  />
+                );
+              })()
             )}
             <DefectPieChart
               title="Defects by Module"
