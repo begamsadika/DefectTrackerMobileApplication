@@ -10,6 +10,7 @@ import { getDefectDensity } from '../api/defectdensity'; // Import getDefectDens
 import { getDefectRemarkRatio } from '../api/defectremarkratio'; // Import getDefectRemarkRatio
 import { getDefectSeverityIndex } from '../api/severityindex'; // Import getDefectSeverityIndex
 import { getDefectDistributionByType } from '../api/defectdistribution'; // Import getDefectDistributionByType
+import { getDefectByModule } from '../api/defectbymodule'; // Import getDefectByModule
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -86,6 +87,9 @@ const ProjectDetails = () => {
   const [defectDistributionData, setDefectDistributionData] = useState<any[]>([]);
   const [defectDistributionLoading, setDefectDistributionLoading] = useState(false);
   const [defectDistributionError, setDefectDistributionError] = useState<string | null>(null);
+  const [defectByModuleData, setDefectByModuleData] = useState<any[]>([]); // State for defect by module data
+  const [defectByModuleLoading, setDefectByModuleLoading] = useState(false); // Loading state for defect by module
+  const [defectByModuleError, setDefectByModuleError] = useState<string | null>(null); // Error state for defect by module
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -192,6 +196,24 @@ const ProjectDetails = () => {
     }
   }, [selectedProject]);
 
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchDefectByModuleData = async () => {
+        setDefectByModuleLoading(true);
+        try {
+          const data = await getDefectByModule(selectedProject.id);
+          console.log('Defect by module API response:', data);
+          setDefectByModuleData(data.data.distribution || []);
+        } catch (err: any) {
+          setDefectByModuleError(err.message || 'Failed to fetch defect by module data');
+        } finally {
+          setDefectByModuleLoading(false);
+        }
+      };
+      fetchDefectByModuleData();
+    }
+  }, [selectedProject]);
+
   const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
   const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
 
@@ -205,6 +227,20 @@ const ProjectDetails = () => {
       case 'Validation': return '#7e22ce'; // Purple
       default: return '#64748b'; // Gray default
     }
+  };
+
+  // Function to assign consistent colors to module types
+  const getModuleColor = (moduleName: string | undefined | null) => {
+    if (!moduleName) {
+      return '#64748b'; // Default color for undefined/null moduleName
+    }
+    const colors = ['#3b82f6', '#22c55e', '#facc15', '#ef4444', '#a78bfa', '#06b6d4', '#f97316', '#f43f5e', '#84cc16', '#f87171'];
+    let hash = 0;
+    for (let i = 0; i < moduleName.length; i++) {
+      hash = moduleName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash % colors.length);
+    return colors[index];
   };
 
   // Pie chart data for "Defects Reopened Multiple Times"
@@ -482,12 +518,24 @@ const ProjectDetails = () => {
                 );
               })()
             )}
-            <DefectPieChart
-              title="Defects by Module"
-              data={defectsByModuleData}
-              totalLabel="TOTAL DEFECTS"
-              totalValue={370}
-            />
+            {defectByModuleLoading ? (
+              <Text>Loading defects by module...</Text>
+            ) : defectByModuleError ? (
+              <Text style={{ color: 'red' }}>{defectByModuleError}</Text>
+            ) : (
+              <DefectPieChart
+                title="Defects by Module"
+                data={defectByModuleData.map((item: any, idx: number) => ({
+                  label: item.module && item.module.trim() !== '' ? item.module : `Unknown ${idx + 1}`,
+                  value: item.count,
+                  color: getModuleColor(item.module),
+                  percentage: item.percentage,
+                  key: `${item.module || 'unknown'}-${idx}`
+                }))}
+                totalLabel="TOTAL DEFECTS"
+                totalValue={defectByModuleData.reduce((sum: number, item: any) => sum + item.count, 0)}
+              />
+            )}
           </View>
 
           {/* Time to Find/Fix Defects Charts */}

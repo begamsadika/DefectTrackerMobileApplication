@@ -7,6 +7,7 @@ interface PieChartData {
   value: number;
   color: string;
   percentage: number;
+  key?: string;
 }
 
 interface DefectPieChartProps {
@@ -118,8 +119,8 @@ const DefectPieChart: React.FC<DefectPieChartProps> = ({
       
       {/* Legend */}
       <View style={styles.legend}>
-        {filteredData.map((item) => (
-          <View key={item.label} style={styles.legendItem}>
+        {filteredData.map((item, idx) => (
+          <View key={item.key || item.label + '-' + idx} style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: item.color }]} />
             <Text style={styles.legendText}>
               {item.label} {item.value} ({item.percentage.toFixed(1)}%)
