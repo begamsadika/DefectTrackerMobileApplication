@@ -9,6 +9,7 @@ import { getProjects } from '../api/projectget';
 import { getDefectDensity } from '../api/defectdensity'; // Import getDefectDensity
 import { getDefectRemarkRatio } from '../api/defectremarkratio'; // Import getDefectRemarkRatio
 import { getDefectSeverityIndex } from '../api/severityindex'; // Import getDefectSeverityIndex
+import { getDefectDistributionByType } from '../api/defectdistribution'; // Import getDefectDistributionByType
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -81,6 +82,10 @@ const ProjectDetails = () => {
   const [defectSeverityIndex, setDefectSeverityIndex] = useState<number | null>(null); // State for defect severity index
   const [defectSeverityIndexLoading, setDefectSeverityIndexLoading] = useState(false); // Loading state for severity index
   const [defectSeverityIndexError, setDefectSeverityIndexError] = useState<string | null>(null); // Error state for severity index
+  const [defectSeverityInterpretation, setDefectSeverityInterpretation] = useState<string | null>(null); // State for severity interpretation
+  const [defectDistributionData, setDefectDistributionData] = useState<any[]>([]);
+  const [defectDistributionLoading, setDefectDistributionLoading] = useState(false);
+  const [defectDistributionError, setDefectDistributionError] = useState<string | null>(null);
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -157,6 +162,7 @@ const ProjectDetails = () => {
           const data = await getDefectSeverityIndex(selectedProject.id);
           const dsiValue = parseFloat(data.data.data.dsiPercentage);
           setDefectSeverityIndex(isNaN(dsiValue) ? null : dsiValue);
+          setDefectSeverityInterpretation(data.data.data.interpretation);
         } catch (err: any) {
           setDefectSeverityIndexError(err.message || 'Failed to fetch defect severity index');
         } finally {
@@ -167,8 +173,37 @@ const ProjectDetails = () => {
     }
   }, [selectedProject]);
 
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchDefectDistribution = async () => {
+        setDefectDistributionLoading(true);
+        try {
+          const data = await getDefectDistributionByType(selectedProject.id);
+          setDefectDistributionData(data.data.distribution || []);
+        } catch (err: any) {
+          setDefectDistributionError(err.message || 'Failed to fetch defect distribution by type');
+        } finally {
+          setDefectDistributionLoading(false);
+        }
+      };
+      fetchDefectDistribution();
+    }
+  }, [selectedProject]);
+
   const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
   const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
+
+  // Function to assign consistent colors to defect types
+  const getDefectTypeColor = (defectType: string) => {
+    switch (defectType) {
+      case 'UI/UX': return '#3b82f6'; // Blue
+      case 'Backend Logic': return '#ef4444'; // Red
+      case 'Functionality': return '#10b981'; // Green
+      case 'Usability': return '#f59e0b'; // Orange
+      case 'Validation': return '#7e22ce'; // Purple
+      default: return '#64748b'; // Gray default
+    }
+  };
 
   // Pie chart data for "Defects Reopened Multiple Times"
   const reopenedDefectsData = [
@@ -358,7 +393,7 @@ const ProjectDetails = () => {
             {/* Defect Density Card - Increased Y Axis Size */}
             <View style={[styles.summaryCard, { paddingTop: 40, paddingBottom: 40, minHeight: 220 }]}> 
               <Text style={{ fontWeight: 'bold', fontSize: 20, marginBottom: 8, textAlign: 'center', color:'#14316e' }}>
-                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{defectDensityLoading ? 'Loading...' : defectDensityError ? 'Error' : (defectDensity !== null && typeof defectDensity === 'number') ? defectDensity.toFixed(4) : 'N/A'}</Text>
+                Defect Density: <Text style={{ color: '#2563eb', fontWeight: 'bold', fontSize: 24 }}>{defectDensityLoading ? 'Loading...' : defectDensityError ? 'Error' : (defectDensity !== null && typeof defectDensity === 'number') ? defectDensity.toFixed(2) : 'N/A'}</Text>
               </Text>
               {/* Gauge meter below (reuse DefectDensityMeter or custom meter) */}
               {defectDensityLoading ? (
@@ -395,7 +430,7 @@ const ProjectDetails = () => {
                 {defectSeverityIndexLoading ? 'Loading...' : defectSeverityIndexError ? 'Error' : (defectSeverityIndex !== null && typeof defectSeverityIndex === 'number') ? defectSeverityIndex.toFixed(1) : 'N/A'}
               </Text>
               <Text style={{ fontSize: 15, color: '#64748b', textAlign: 'center', maxWidth: 180 }}>
-                Weighted severity score (higher = more severe defects)
+                {defectSeverityIndexLoading ? 'Loading...' : defectSeverityIndexError ? 'Error' : defectSeverityInterpretation || 'N/A'}
               </Text>
             </View>
           </View>
@@ -420,14 +455,25 @@ const ProjectDetails = () => {
               totalLabel="TOTAL DEFECTS"
               totalValue={220}
             />
-            <DefectPieChart
-              title="Defect Distribution by Type"
-              data={defectTypeData}
-              totalLabel="TOTAL DEFECTS"
-              totalValue={459}
-              mostCommonLabel="Most Common Functionality"
-              mostCommonValue={245}
-            />
+            {defectDistributionLoading ? (
+              <Text>Loading defect distribution...</Text>
+            ) : defectDistributionError ? (
+              <Text style={{ color: 'red' }}>{defectDistributionError}</Text>
+            ) : (
+              <DefectPieChart
+                title="Defect Distribution by Type"
+                data={defectDistributionData.map((item: any) => ({
+                  label: item.defectType,
+                  value: item.count,
+                  color: getDefectTypeColor(item.defectType), // Assign color dynamically
+                  percentage: item.percentage,
+                }))}
+                totalLabel="TOTAL DEFECTS"
+                totalValue={defectDistributionData.reduce((sum: number, item: any) => sum + item.count, 0)}
+                mostCommonLabel={defectDistributionData.length > 0 ? `Most Common ${defectDistributionData.reduce((prev: any, current: any) => (prev.count > current.count) ? prev : current).defectType}` : "Most Common"}
+                mostCommonValue={defectDistributionData.length > 0 ? Math.max(...defectDistributionData.map((item: any) => item.count)) : 0}
+              />
+            )}
             <DefectPieChart
               title="Defects by Module"
               data={defectsByModuleData}

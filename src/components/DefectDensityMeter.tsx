@@ -14,21 +14,22 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
 
   // Determine status text and color based on value (Green: 0-7, Yellow: 7-10, Red: 10-12)
   const getStatusInfo = (value: number) => {
-    if (value < 7) return { text: 'Good', color: '#22c55e' };
-    if (value < 10) return { text: 'Average', color: '#facc15' };
-    return { text: 'Poor', color: '#ef4444' };
+    if (value <= 7.0) return { text: 'Good', color: '#22c55e' };
+    if (value <= 10.0) return { text: 'Medium', color: '#facc15' };
+    return { text: 'High', color: '#ef4444' };
   };
 
   const statusInfo = getStatusInfo(currentValue);
+  const dynamicMaxValue = Math.max(12, Math.ceil(currentValue + 1)); // Ensure maxValue is at least 12 and extends if currentValue is higher
 
   return (
     <View style={styles.container}>
       <View style={styles.speedometerContainer}>
         <RNSpeedometer
-          value={Math.max(0, Math.min(currentValue, 12))}
+          value={Math.max(0, currentValue)}
           size={200}
           minValue={0}
-          maxValue={12}
+          maxValue={dynamicMaxValue}
           allowedDecimals={4} // Allow 4 decimal places for the speedometer itself
           labels={[
             {
@@ -37,12 +38,12 @@ const DefectDensityMeter: React.FC<DefectDensityMeterProps> = ({
               activeBarColor: '#22c55e',
             },
             {
-              name: 'Average',
+              name: 'Medium',
               labelColor: '#facc15',
               activeBarColor: '#facc15',
             },
             {
-              name: 'Poor',
+              name: 'High',
               labelColor: '#ef4444',
               activeBarColor: '#ef4444',
             },
