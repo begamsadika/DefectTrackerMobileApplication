@@ -11,47 +11,20 @@ import { getDefectRemarkRatio } from '../api/defectremarkratio'; // Import getDe
 import { getDefectSeverityIndex } from '../api/severityindex'; // Import getDefectSeverityIndex
 import { getDefectDistributionByType } from '../api/defectdistribution'; // Import getDefectDistributionByType
 import { getDefectByModule } from '../api/defectbymodule'; // Import getDefectByModule
+import { fetchSeveritySummary } from '../api/severitysummary'; // Import fetchSeveritySummary
 
 // Remove static PROJECTS. We'll fetch from API.
 
-const DEFECTS = {
-  high: {
-    total: 112,
-    breakdown: [
-      { label: 'REOPEN', color: '#ef4444', count: 3 },
-      { label: 'NEW', color: '#3b82f6', count: 50 },
-      { label: 'OPEN', color: '#22c55e', count: 5 },
-      { label: 'FIXED', color: '#a3e635', count: 14 },
-      { label: 'CLOSED', color: '#15803d', count: 37 },
-      { label: 'REJECTED', color: '#7e22ce', count: 0 },
-      { label: 'DUPLICATE', color: '#f59e42', count: 3 },
-    ],
-  },
-  medium: {
-    total: 236,
-    breakdown: [
-      { label: 'REOPEN', color: '#ef4444', count: 5 },
-      { label: 'NEW', color: '#3b82f6', count: 125 },
-      { label: 'OPEN', color: '#22c55e', count: 10 },
-      { label: 'FIXED', color: '#a3e635', count: 33 },
-      { label: 'CLOSED', color: '#15803d', count: 60 },
-      { label: 'REJECTED', color: '#7e22ce', count: 2 },
-      { label: 'DUPLICATE', color: '#f59e42', count: 1 },
-    ],
-  },
-  low: {
-    total: 97,
-    breakdown: [
-      { label: 'REOPEN', color: '#ef4444', count: 1 },
-      { label: 'NEW', color: '#3b82f6', count: 58 },
-      { label: 'OPEN', color: '#22c55e', count: 0 },
-      { label: 'FIXED', color: '#a3e635', count: 10 },
-      { label: 'CLOSED', color: '#15803d', count: 24 },
-      { label: 'REJECTED', color: '#7e22ce', count: 1 },
-      { label: 'DUPLICATE', color: '#f59e42', count: 3 },
-    ],
-  },
-};
+interface SeverityBreakdownItem {
+  label: string;
+  count: number;
+  color: string;
+}
+
+interface SelectedSeverityData {
+  total: number;
+  breakdown: SeverityBreakdownItem[];
+}
 
 const riskLabels = {
   high: 'High Risk',
@@ -64,9 +37,33 @@ const riskColors = {
   low: '#22c55e',
 };
 
+const getSeverityColor = (severityName: string) => {
+  switch (severityName.toUpperCase()) {
+    case 'CRITICAL': return '#ef4444'; // Red
+    case 'HIGH': return '#f97316'; // Orange
+    case 'MEDIUM': return '#eab308'; // Yellow
+    case 'LOW': return '#22c55e'; // Green
+    case 'COSMETIC': return '#3b82f6'; // Blue
+    default: return '#64748b'; // Gray default
+  }
+};
+
+const getDefectStatusColor = (status: string) => {
+  switch (status.toUpperCase()) {
+    case 'REOPEN': return '#ef4444';
+    case 'NEW': return '#3b82f6';
+    case 'OPEN': return '#22c55e';
+    case 'FIXED': return '#a3e635';
+    case 'CLOSED': return '#15803d';
+    case 'REJECTED': return '#7e22ce';
+    case 'DUPLICATE': return '#f59e42';
+    default: return '#64748b';
+  }
+};
+
 const ProjectDetails = () => {
   const [showPieModal, setShowPieModal] = useState(false);
-  const [selectedSeverity, setSelectedSeverity] = useState<'high' | 'medium' | 'low'>('high');
+  const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
   const route = useRoute();
   const navigation = useNavigation();
   const [projects, setProjects] = useState<any[]>([]);
@@ -90,6 +87,10 @@ const ProjectDetails = () => {
   const [defectByModuleData, setDefectByModuleData] = useState<any[]>([]); // State for defect by module data
   const [defectByModuleLoading, setDefectByModuleLoading] = useState(false); // Loading state for defect by module
   const [defectByModuleError, setDefectByModuleError] = useState<string | null>(null); // Error state for defect by module
+  const [severitySummaryData, setSeveritySummaryData] = useState<any[]>([]); // State for defect severity summary
+  const [severitySummaryLoading, setSeveritySummaryLoading] = useState(false); // Loading state for severity summary
+  const [severitySummaryError, setSeveritySummaryError] = useState<string | null>(null); // Error state for severity summary
+  const [selectedSeverityData, setSelectedSeverityData] = useState<SelectedSeverityData>({ total: 0, breakdown: [] }); // State to hold selected severity breakdown for modal
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -214,8 +215,88 @@ const ProjectDetails = () => {
     }
   }, [selectedProject]);
 
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchSeveritySummaryData = async () => {
+        setSeveritySummaryLoading(true);
+        try {
+          const data = await fetchSeveritySummary(selectedProject.id);
+          const defectSummary = data?.defectSummary || [];
+          setSeveritySummaryData(defectSummary);
+          // Set initial selected severity for the modal based on the first item or a default
+          if (defectSummary.length > 0) {
+            setSelectedSeverity(defectSummary[0].severity);
+            setSelectedSeverityData({
+              total: defectSummary[0].total,
+              // The backend response has 'statuses' which needs to be transformed to 'breakdown'
+              breakdown: Object.entries(defectSummary[0].statuses).map(([statusName, statusData]: [string, any]) => ({
+                label: statusName,
+                count: statusData.count,
+                color: getDefectStatusColor(statusName),
+              })),
+            });
+          } else {
+            setSelectedSeverity(null);
+            setSelectedSeverityData({ total: 0, breakdown: [] });
+          }
+        } catch (err: any) {
+          console.error("Error fetching defect severity summary:", err);
+          setSeveritySummaryError(err.message || 'Failed to fetch severity summary');
+          setSelectedSeverityData({ total: 0, breakdown: [] }); // Also set default on error
+        } finally {
+          setSeveritySummaryLoading(false);
+        }
+      };
+      fetchSeveritySummaryData();
+    } else {
+      // If no selected project, reset severity data
+      setSelectedSeverity(null);
+      setSeveritySummaryData([]); // Also reset severitySummaryData
+      setSelectedSeverityData({ total: 0, breakdown: [] });
+    }
+  }, [selectedProject]);
+
+  // Helper to get total defects for a given severity
+  const getTotalDefectsForSeverity = (severityName: string) => {
+    const severity = severitySummaryData.find((item: any) => item.severity.toLowerCase() === severityName.toLowerCase());
+    return severity ? severity.total : 0;
+  };
+
+  // Helper to get defect breakdown for a given severity
+  const getBreakdownForSeverity = (severityName: string): SeverityBreakdownItem[] => {
+    const severityItem = severitySummaryData.find((item: any) => item.severity.toLowerCase() === severityName.toLowerCase());
+    if (!severityItem || !severityItem.statuses) return [];
+
+    return Object.entries(severityItem.statuses).map(([statusName, statusData]: [string, any]) => ({
+      label: statusName,
+      count: statusData.count,
+      color: getDefectStatusColor(statusName),
+    }));
+  };
+
   const risk: 'high' | 'medium' | 'low' = selectedProject?.risk || 'low';
-  const defects = DEFECTS[risk as 'high' | 'medium' | 'low'];
+
+  // Map fetched severity data to a structure usable by the breakdown cards and modal
+  const severityBreakdownData = Array.isArray(severitySummaryData) ? severitySummaryData.reduce((acc: any, item: any) => {
+    const severityKey = item.severity.toLowerCase(); // e.g., 'critical', 'high', 'medium', 'low', 'cosmetic'
+    acc[severityKey] = {
+      total: item.total,
+      breakdown: getBreakdownForSeverity(item.severity),
+    };
+    return acc;
+  }, {}) : {};
+
+  // Define a mapping from severity name to a generic risk category for color/labeling
+  const mapSeverityToRiskCategory = (severityName: string): 'high' | 'medium' | 'low' => {
+    switch (severityName.toLowerCase()) {
+      case 'critical': return 'high';
+      case 'high': return 'high';
+      case 'medium': return 'medium';
+      case 'low': return 'low';
+      case 'cosmetic': return 'low';
+      default: return 'low';
+    }
+  };
 
   // Function to assign consistent colors to defect types
   const getDefectTypeColor = (defectType: string) => {
@@ -271,7 +352,27 @@ const ProjectDetails = () => {
     { label: 'Dashboard', value: 19, color: '#f87171', percentage: 4.14 },
   ];
 
-
+  const ModalPieChartContent = ({ selectedSeverity, selectedSeverityData }: { selectedSeverity: string | null; selectedSeverityData: SelectedSeverityData }) => {
+    if (!selectedSeverityData || !selectedSeverity) {
+      return <Text>No data available for this severity.</Text>;
+    }
+    return (
+      <>
+        <Text style={styles.modalTitle}>Status Breakdown for {selectedSeverity.charAt(0).toUpperCase() + selectedSeverity.slice(1)}</Text>
+        <DefectPieChart
+          title="Status Breakdown"
+          data={selectedSeverityData.breakdown.map((item: SeverityBreakdownItem) => ({
+            label: item.label,
+            value: item.count,
+            color: item.color,
+            percentage: selectedSeverityData.total > 0 ? (item.count / selectedSeverityData.total) * 100 : 0
+          }))}
+          totalLabel="TOTAL DEFECTS"
+          totalValue={selectedSeverityData.total}
+        />
+      </>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -351,51 +452,43 @@ const ProjectDetails = () => {
             textAlign: 'left',
           }}>Defect Severity Breakdown</Text>
           <View style={styles.breakdownCol}>
-            {/* High */}
-            <View style={[styles.breakdownCard, { borderColor: riskColors.high }]}> 
-              <View style={styles.breakdownCardHeader}>
-                <Text style={[styles.breakdownCardTitle, { color: riskColors.high }]}>Defects on High</Text>
-                <Text style={styles.breakdownTotal}>Total: {DEFECTS.high.total}</Text>
-              </View>
-              <View style={styles.breakdownList}>
-                {DEFECTS.high.breakdown.map((item, i) => (
-                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-                ))}
-              </View>
-              <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('high'); setShowPieModal(true); }}>
-                <Text style={styles.viewChartButtonText}>View Chart</Text>
-              </TouchableOpacity>
-            </View>
-            {/* Medium */}
-            <View style={[styles.breakdownCard, { borderColor: riskColors.medium }]}> 
-              <View style={styles.breakdownCardHeader}>
-                <Text style={[styles.breakdownCardTitle, { color: riskColors.medium }]}>Defects on Medium</Text>
-                <Text style={styles.breakdownTotal}>Total: {DEFECTS.medium.total}</Text>
-              </View>
-              <View style={styles.breakdownList}>
-                {DEFECTS.medium.breakdown.map((item, i) => (
-                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-                ))}
-              </View>
-              <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('medium'); setShowPieModal(true); }}>
-                <Text style={styles.viewChartButtonText}>View Chart</Text>
-              </TouchableOpacity>
-            </View>
-            {/* Low */}
-            <View style={[styles.breakdownCard, { borderColor: riskColors.low }]}> 
-              <View style={styles.breakdownCardHeader}>
-                <Text style={[styles.breakdownCardTitle, { color: riskColors.low }]}>Defects on Low</Text>
-                <Text style={styles.breakdownTotal}>Total: {DEFECTS.low.total}</Text>
-              </View>
-              <View style={styles.breakdownList}>
-                {DEFECTS.low.breakdown.map((item, i) => (
-                  <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
-                ))}
-              </View>
-              <TouchableOpacity style={styles.viewChartButton} onPress={() => { setSelectedSeverity('low'); setShowPieModal(true); }}>
-                <Text style={styles.viewChartButtonText}>View Chart</Text>
-              </TouchableOpacity>
-            </View>
+            {severitySummaryLoading ? (
+              <Text>Loading severity summary...</Text>
+            ) : severitySummaryError ? (
+              <Text style={{ color: 'red' }}>{severitySummaryError}</Text>
+            ) : (severitySummaryData && severitySummaryData.length > 0 ? (
+              severitySummaryData.map((severityItem: any) => {
+                const mappedRiskCategory = mapSeverityToRiskCategory(severityItem.severity);
+                return (
+                  <View key={severityItem.severity} style={[styles.breakdownCard, { borderColor: riskColors[mappedRiskCategory] }]}>
+                    <View style={styles.breakdownCardHeader}>
+                      <Text style={[styles.breakdownCardTitle, { color: getSeverityColor(severityItem.severity) }]}>Defects on {severityItem.severity}</Text>
+                      <Text style={styles.breakdownTotal}>Total: {severityItem.total}</Text>
+                    </View>
+                    <View style={styles.breakdownList}>
+                      {getBreakdownForSeverity(severityItem.severity).map((item, i) => (
+                        <Text key={item.label + i} style={{ color: item.color, fontWeight: 'bold', marginRight: 8 }}>{item.label} <Text style={{ color: '#222', fontWeight: 'normal' }}>{item.count}</Text></Text>
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.viewChartButton}
+                      onPress={() => {
+                        setSelectedSeverity(severityItem.severity);
+                        setSelectedSeverityData({
+                          total: severityItem.total,
+                          breakdown: getBreakdownForSeverity(severityItem.severity),
+                        });
+                        setShowPieModal(true);
+                      }}
+                    >
+                      <Text style={styles.viewChartButtonText}>View Chart</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })
+            ) : (
+              <Text>No severity summary data available.</Text>
+            ))}
           </View>
 
           {/* Modal for Pie Chart */}
@@ -407,18 +500,7 @@ const ProjectDetails = () => {
           >
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Status Breakdown for {selectedSeverity.charAt(0).toUpperCase() + selectedSeverity.slice(1)}</Text>
-                <DefectPieChart
-                  title="Status Breakdown"
-                  data={DEFECTS[selectedSeverity].breakdown.map(item => ({
-                    label: item.label,
-                    value: item.count,
-                    color: item.color,
-                    percentage: DEFECTS[selectedSeverity].total > 0 ? (item.count / DEFECTS[selectedSeverity].total) * 100 : 0
-                  }))}
-                  totalLabel="TOTAL DEFECTS"
-                  totalValue={DEFECTS[selectedSeverity].total}
-                />
+                <ModalPieChartContent selectedSeverity={selectedSeverity} selectedSeverityData={selectedSeverityData} />
                 <TouchableOpacity style={styles.closeModalButton} onPress={() => setShowPieModal(false)}>
                   <Text style={styles.closeModalButtonText}>Close</Text>
                 </TouchableOpacity>
@@ -694,6 +776,7 @@ const styles = StyleSheet.create({
     color: '#222',
     fontWeight: '500',
     marginBottom: 2,
+    textAlign: 'right',
   },
   projectStatusValue: {
     fontSize: 16,
