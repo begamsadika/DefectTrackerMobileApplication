@@ -4,12 +4,15 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import { getProjects } from '../api/projectget';
+import { fetchProjectCardColors, ProjectCardColor } from '../api/projectcardcolour';
 
 interface Project {
   id: number;
   project_name: string;
   project_status: string;
   risk: 'high' | 'medium' | 'low';
+  cardColor?: string; // Add cardColor to Project interface
+  colorCode?: string; // Add colorCode to Project interface
 }
 
 // Icon component with fallback
@@ -61,6 +64,13 @@ const riskColors = {
   low: '#0b9c40',
 };
 
+const backendColorMap: { [key: string]: string } = {
+  Red: '#c90404',
+  Green: '#0b9c40',
+  Yellow: '#d9c10d',
+  // Add other colors if necessary
+};
+
 // Function to map project_status to risk
 const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
   switch (status) {
@@ -82,16 +92,26 @@ const Dashboard = () => {
   const [projects, setProjects] = React.useState<Project[]>([]); // State for fetched projects
   const [loading, setLoading] = React.useState(true); // Loading state
   const [error, setError] = React.useState<string | null>(null); // Error state
+  const [projectCardColors, setProjectCardColors] = React.useState<ProjectCardColor[]>([]); // State for project card colors
 
   React.useEffect(() => {
     const fetchProjectsData = async () => {
       try {
         setLoading(true);
         const fetchedProjects = await getProjects();
-        // Assuming getProjects returns an object with a 'data' property that is an array
-        setProjects(fetchedProjects.map((project: any) => ({ ...project, risk: getRiskFromStatus(project.project_status) })) || []); 
+        const fetchedCardColors = await fetchProjectCardColors();
+
+        const projectsWithColors = fetchedProjects.map((project: any) => {
+          const cardColorData = fetchedCardColors.find(colorData => colorData.projectName === project.project_name); // Match by projectName
+          return {
+            ...project,
+            risk: getRiskFromStatus(project.project_status),
+            cardColor: cardColorData ? cardColorData.colorCode : undefined, // Use colorCode
+          };
+        });
+        setProjects(projectsWithColors || []);
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch projects');
+        setError(err.message || 'Failed to fetch projects or card colors');
       } finally {
         setLoading(false);
       }
@@ -247,23 +267,22 @@ const Dashboard = () => {
             ) : (
               filteredProjects.map((project, idx) => {
                 let cardStyle, labelStyle, labelText;
+                // Use cardColor from project object if available, otherwise fallback to riskColors
+                const bgColor = project.cardColor ? backendColorMap[project.cardColor] : riskColors[project.risk];
+
+                cardStyle = [styles.circleCard, { backgroundColor: bgColor, borderColor: bgColor }];
+
                 if (project.risk === 'high') {
-                  cardStyle = [styles.circleRed, { backgroundColor: riskColors.high, borderColor: riskColors.high }];
-                  labelStyle = styles.circleLabelRed;
                   labelText = 'High Risk';
                 } else if (project.risk === 'medium') {
-                  cardStyle = [styles.circleYellow, { backgroundColor: riskColors.medium, borderColor: riskColors.medium }];
-                  labelStyle = styles.circleLabelYellow;
                   labelText = 'Medium Risk';
                 } else {
-                  cardStyle = [styles.circleGreen, { backgroundColor: riskColors.low, borderColor: riskColors.low }];
-                  labelStyle = styles.circleLabelGreen;
                   labelText = 'Low Risk';
                 }
                 return (
                   <TouchableOpacity
                     key={idx}
-                    style={[styles.circleCard, cardStyle]}
+                    style={[cardStyle]}
                     activeOpacity={0.8}
                     onPress={() => navigation.navigate('ProjectDetails', { project })}
                   >
