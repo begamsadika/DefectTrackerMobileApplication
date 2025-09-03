@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.43.135:3000/api/dashboard';
+const API_BASE_URL = 'http://192.168.1.15:3000/api/dashboard';
 
 export interface ProjectCardColor {
   projectName: string;

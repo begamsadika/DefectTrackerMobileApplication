@@ -12,6 +12,7 @@ import { getDefectSeverityIndex } from '../api/severityindex'; // Import getDefe
 import { getDefectDistributionByType } from '../api/defectdistribution'; // Import getDefectDistributionByType
 import { getDefectByModule } from '../api/defectbymodule'; // Import getDefectByModule
 import { fetchSeveritySummary } from '../api/severitysummary'; // Import fetchSeveritySummary
+import { RouteProp } from '@react-navigation/native';
 
 // Remove static PROJECTS. We'll fetch from API.
 
@@ -25,6 +26,20 @@ interface SelectedSeverityData {
   total: number;
   breakdown: SeverityBreakdownItem[];
 }
+
+interface Project { // Define Project interface to match what's passed from Dashboard
+  id: number;
+  project_name: string;
+  project_status: string;
+  risk: 'high' | 'medium' | 'low';
+  cardColor?: string;
+  colorCode?: string;
+  backendStatus?: string;
+}
+
+type ProjectDetailsRouteParams = {
+  project: Project;
+};
 
 const riskLabels = {
   high: 'High Risk',
@@ -48,23 +63,12 @@ const getSeverityColor = (severityName: string) => {
   }
 };
 
-const getDefectStatusColor = (status: string) => {
-  switch (status.toUpperCase()) {
-    case 'REOPEN': return '#ef4444';
-    case 'NEW': return '#3b82f6';
-    case 'OPEN': return '#22c55e';
-    case 'FIXED': return '#a3e635';
-    case 'CLOSED': return '#15803d';
-    case 'REJECTED': return '#7e22ce';
-    case 'DUPLICATE': return '#f59e42';
-    default: return '#64748b';
-  }
-};
-
 const ProjectDetails = () => {
   const [showPieModal, setShowPieModal] = useState(false);
   const [selectedSeverity, setSelectedSeverity] = useState<string | null>(null);
-  const route = useRoute();
+  const route = useRoute<RouteProp<{
+    ProjectDetails: ProjectDetailsRouteParams;
+  }, 'ProjectDetails'>>();
   const navigation = useNavigation();
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
@@ -107,12 +111,17 @@ const ProjectDetails = () => {
   };
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchAllProjects = async () => {
       setLoading(true);
       try {
         const fetchedProjects = await getProjects();
         setProjects(fetchedProjects);
-        if (fetchedProjects.length > 0) {
+
+        // Set selectedProject based on route params or first fetched project
+        const projectFromParams = route.params?.project;
+        if (projectFromParams) {
+          setSelectedProject(projectFromParams);
+        } else if (fetchedProjects.length > 0) {
           setSelectedProject({ ...fetchedProjects[0], risk: getRiskFromStatus(fetchedProjects[0].project_status) });
         }
       } catch (err: any) {
@@ -121,8 +130,8 @@ const ProjectDetails = () => {
         setLoading(false);
       }
     };
-    fetchProjects();
-  }, []);
+    fetchAllProjects();
+  }, [route.params?.project]); // Re-run when project param changes
 
   useEffect(() => {
     if (selectedProject?.id) {
@@ -232,7 +241,7 @@ const ProjectDetails = () => {
               breakdown: Object.entries(defectSummary[0].statuses).map(([statusName, statusData]: [string, any]) => ({
                 label: statusName,
                 count: statusData.count,
-                color: getDefectStatusColor(statusName),
+                color: statusData.color || '#64748b', // Use the color directly from the backend, with a gray fallback
               })),
             });
           } else {
@@ -270,7 +279,7 @@ const ProjectDetails = () => {
     return Object.entries(severityItem.statuses).map(([statusName, statusData]: [string, any]) => ({
       label: statusName,
       count: statusData.count,
-      color: getDefectStatusColor(statusName),
+      color: statusData.color || '#64748b', // Use the color directly from the backend, with a gray fallback
     }));
   };
 

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, ImageBackg
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getProjects } from '../api/projectget';
 import { fetchProjectCardColors, ProjectCardColor } from '../api/projectcardcolour';
 
@@ -13,6 +14,7 @@ interface Project {
   risk: 'high' | 'medium' | 'low';
   cardColor?: string; // Add cardColor to Project interface
   colorCode?: string; // Add colorCode to Project interface
+  backendStatus?: string; // Add backendStatus to Project interface to store status from ProjectCardColor
 }
 
 // Icon component with fallback
@@ -71,6 +73,23 @@ const backendColorMap: { [key: string]: string } = {
   // Add other colors if necessary
 };
 
+// Function to map backend status to internal risk type
+const mapBackendStatusToRisk = (backendStatus: string): 'high' | 'medium' | 'low' => {
+  switch (backendStatus) {
+    case 'High':
+    case 'High Risk':
+      return 'high';
+    case 'Good':
+    case 'Low Risk':
+      return 'low'; // Assuming 'Good' maps to low risk
+    case 'Medium':
+    case 'Medium Risk':
+      return 'medium';
+    default:
+      return 'low'; // Default to low risk
+  }
+};
+
 // Function to map project_status to risk
 const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
   switch (status) {
@@ -85,14 +104,23 @@ const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
   }
 };
 
+type RootStackParamList = {
+  Settings: undefined;
+  ProjectDetails: { project: Project };
+  Dashboard: undefined;
+};
+
+type AppNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const Dashboard = () => {
   const [selectedRisk, setSelectedRisk] = React.useState('all');
   const [modalVisible, setModalVisible] = React.useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<AppNavigationProp>();
   const [projects, setProjects] = React.useState<Project[]>([]); // State for fetched projects
   const [loading, setLoading] = React.useState(true); // Loading state
   const [error, setError] = React.useState<string | null>(null); // Error state
   const [projectCardColors, setProjectCardColors] = React.useState<ProjectCardColor[]>([]); // State for project card colors
+  const [filteredProjectsToDisplay, setFilteredProjectsToDisplay] = React.useState<Project[]>([]); // State for projects to display after filtering
 
   React.useEffect(() => {
     const fetchProjectsData = async () => {
@@ -105,11 +133,14 @@ const Dashboard = () => {
           const cardColorData = fetchedCardColors.find(colorData => colorData.projectName === project.project_name); // Match by projectName
           return {
             ...project,
-            risk: getRiskFromStatus(project.project_status),
-            cardColor: cardColorData ? cardColorData.colorCode : undefined, // Use colorCode
+            risk: cardColorData ? mapBackendStatusToRisk(cardColorData.status) : getRiskFromStatus(project.project_status), // Use backend status for risk
+            cardColor: cardColorData ? backendColorMap[cardColorData.colorCode] : undefined, // Use colorCode with map
+            colorCode: cardColorData ? cardColorData.colorCode : undefined, // Explicitly set colorCode
+            backendStatus: cardColorData ? cardColorData.status : undefined, // Store backend status
           };
         });
         setProjects(projectsWithColors || []);
+        setFilteredProjectsToDisplay(projectsWithColors || []); // Initialize filtered projects with all projects
       } catch (err: any) {
         setError(err.message || 'Failed to fetch projects or card colors');
       } finally {
@@ -119,12 +150,26 @@ const Dashboard = () => {
     fetchProjectsData();
   }, []);
 
+  React.useEffect(() => {
+    const applyFilter = async () => {
+      if (selectedRisk === 'all') {
+        setFilteredProjectsToDisplay(projects);
+        return;
+      }
+
+      setLoading(true);
+      // Frontend filtering based on selectedRisk
+      const filtered = projects.filter(project => project.risk === selectedRisk);
+      setFilteredProjectsToDisplay(filtered);
+      setLoading(false);
+    };
+
+    applyFilter();
+  }, [selectedRisk, projects]); // Re-run when selectedRisk or projects change
+
   // Sort projects: high (red), then medium (yellow), then low (green)
   const riskOrder = { high: 0, medium: 1, low: 2 };
-  const filteredProjects = (selectedRisk === 'all'
-    ? projects
-    : projects.filter(p => p.risk === selectedRisk)
-  ).slice().sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
+  const displayProjects = filteredProjectsToDisplay.slice().sort((a, b) => riskOrder[a.risk] - riskOrder[b.risk]);
 
   return (
     <View style={styles.container}>
@@ -262,13 +307,13 @@ const Dashboard = () => {
               <Text style={{ textAlign: 'center', fontSize: 16, color: '#14316e', marginTop: 20 }}>Loading projects...</Text>
             ) : error ? (
               <Text style={{ textAlign: 'center', fontSize: 16, color: 'red', marginTop: 20 }}>Error: {error}</Text>
-            ) : filteredProjects.length === 0 ? (
+            ) : displayProjects.length === 0 ? (
               <Text style={{ textAlign: 'center', fontSize: 16, color: '#14316e', marginTop: 20 }}>No projects found for this filter.</Text>
             ) : (
-              filteredProjects.map((project, idx) => {
-                let cardStyle, labelStyle, labelText;
+              displayProjects.map((project, idx) => {
+                let cardStyle, labelText;
                 // Use cardColor from project object if available, otherwise fallback to riskColors
-                const bgColor = project.cardColor ? backendColorMap[project.cardColor] : riskColors[project.risk];
+                const bgColor = project.colorCode ? backendColorMap[project.colorCode] : riskColors[project.risk];
 
                 cardStyle = [styles.circleCard, { backgroundColor: bgColor, borderColor: bgColor }];
 
@@ -631,7 +676,7 @@ headerProfileOverlapWrap: {
   card: {
     width: '94%',
     minHeight: 70,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
     borderRadius: 10,
     padding: 8,
     alignItems: 'flex-start',
