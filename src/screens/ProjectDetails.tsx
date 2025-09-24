@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, ImageBackground, Modal, Image } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
@@ -12,6 +12,7 @@ import { getDefectSeverityIndex } from '../api/severityindex'; // Import getDefe
 import { getDefectDistributionByType } from '../api/defectdistribution'; // Import getDefectDistributionByType
 import { getDefectByModule } from '../api/defectbymodule'; // Import getDefectByModule
 import { fetchSeveritySummary } from '../api/severitysummary'; // Import fetchSeveritySummary
+import { getDefectReopenCounts } from '../api/reopencount'; // Import getDefectReopenCounts
 import { RouteProp } from '@react-navigation/native';
 
 // Remove static PROJECTS. We'll fetch from API.
@@ -95,6 +96,9 @@ const ProjectDetails = () => {
   const [severitySummaryLoading, setSeveritySummaryLoading] = useState(false); // Loading state for severity summary
   const [severitySummaryError, setSeveritySummaryError] = useState<string | null>(null); // Error state for severity summary
   const [selectedSeverityData, setSelectedSeverityData] = useState<SelectedSeverityData>({ total: 0, breakdown: [] }); // State to hold selected severity breakdown for modal
+  const [defectReopenCounts, setDefectReopenCounts] = useState<{[key: string]: number} | null>(null); // State for defect reopen counts
+  const [defectReopenCountsLoading, setDefectReopenCountsLoading] = useState(false); // Loading state for reopen counts
+  const [defectReopenCountsError, setDefectReopenCountsError] = useState<string | null>(null); // Error state for reopen counts
 
   // Function to map project_status to risk
   const getRiskFromStatus = (status: string): 'high' | 'medium' | 'low' => {
@@ -265,6 +269,28 @@ const ProjectDetails = () => {
     }
   }, [selectedProject]);
 
+  useEffect(() => {
+    if (selectedProject?.id) {
+      const fetchDefectReopenCountsData = async () => {
+        setDefectReopenCountsLoading(true);
+        try {
+          const data = await getDefectReopenCounts(selectedProject.id);
+          setDefectReopenCounts(data.reopenCounts); // Assuming data.reopenCounts is the object we need
+        } catch (err: any) {
+          console.error("Error fetching defect reopen counts:", err);
+          setDefectReopenCountsError(err.message || 'Failed to fetch defect reopen counts');
+        } finally {
+          setDefectReopenCountsLoading(false);
+        }
+      };
+      fetchDefectReopenCountsData();
+    } else {
+      // If no selected project, reset reopen counts data
+      setDefectReopenCounts(null);
+      setDefectReopenCountsError(null);
+    }
+  }, [selectedProject]);
+
   // Helper to get total defects for a given severity
   const getTotalDefectsForSeverity = (severityName: string) => {
     const severity = severitySummaryData.find((item: any) => item.severity.toLowerCase() === severityName.toLowerCase());
@@ -334,10 +360,25 @@ const ProjectDetails = () => {
   };
 
   // Pie chart data for "Defects Reopened Multiple Times"
-  const reopenedDefectsData = [
-    { label: '2 times', value: 183, color: '#3b82f6', percentage: 83.2 },
-    { label: '4 times', value: 37, color: '#fbbf24', percentage: 16.8 },
-  ];
+  const reopenedDefectsData = useMemo(() => {
+    if (!defectReopenCounts || Object.keys(defectReopenCounts).length === 0) {
+      return [];
+    }
+
+    const data = Object.entries(defectReopenCounts).map(([id, count]) => ({
+      label: `Defect ID: ${id}`,
+      value: count as number, // Cast to number
+      color: '#3b82f6', // Default color, can be made dynamic if needed
+      percentage: 0, // Will be calculated later
+    }));
+
+    const totalReopens = data.reduce((sum, item) => sum + item.value, 0);
+
+    return data.map(item => ({
+      ...item,
+      percentage: totalReopens > 0 ? (item.value / totalReopens) * 100 : 0,
+    }));
+  }, [defectReopenCounts]);
 
   // Pie chart data for "Defect Distribution by Type"
   const defectTypeData = [
@@ -582,7 +623,7 @@ const ProjectDetails = () => {
               title="Defects Reopened Multiple Times"
               data={reopenedDefectsData}
               totalLabel="TOTAL DEFECTS"
-              totalValue={220}
+              totalValue={reopenedDefectsData.reduce((sum, item) => sum + item.value, 0)}
             />
             {defectDistributionLoading ? (
               <Text>Loading defect distribution...</Text>
